@@ -2,7 +2,7 @@ import fp from 'fastify-plugin';
 import { errors } from '../../lib/errors.js';
 import type { BucketPolicy, TokenBucket } from './token-bucket.js';
 
-export type { BucketPolicy, TokenBucket } from './token-bucket.js';
+export type { TokenBucket } from './token-bucket.js';
 
 declare module 'fastify' {
 	interface FastifyContextConfig {
@@ -14,7 +14,7 @@ declare module 'fastify' {
 	}
 }
 
-export interface RateLimitOptions {
+interface RateLimitOptions {
 	enabled: boolean;
 	bucket: TokenBucket;
 	/** Applied to routes without their own `config.rateLimit`. */
