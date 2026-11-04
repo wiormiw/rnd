@@ -16,8 +16,6 @@ export const testEnv = {
 	LOG_LEVEL: 'silent',
 } as const;
 
-export const testConfig = loadConfig(testEnv);
-
 export function createInMemoryMemoRepository(): MemoRepository {
 	const rows = new Map<string, Memo>();
 	return {
@@ -39,7 +37,7 @@ export function createInMemoryMemoRepository(): MemoRepository {
 	};
 }
 
-export const allowAll: BucketResult = {
+const allowAll: BucketResult = {
 	allowed: true,
 	remaining: 59,
 	retryAfterMs: 0,
