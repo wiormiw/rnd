@@ -7,7 +7,7 @@ declare module 'fastify' {
 	}
 }
 
-export interface ServicesPluginOptions {
+interface ServicesPluginOptions {
 	services: Services;
 }
 
