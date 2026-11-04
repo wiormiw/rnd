@@ -8,7 +8,7 @@ declare module 'fastify' {
 	}
 }
 
-export interface InfrastructurePluginOptions {
+interface InfrastructurePluginOptions {
 	infra: Infrastructure;
 }
 
