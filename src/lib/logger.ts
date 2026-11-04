@@ -5,7 +5,7 @@ export type { Logger };
 export type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
 
 /** Paths whose values are always replaced with `[redacted]`. */
-export const REDACT_PATHS: readonly string[] = [
+const REDACT_PATHS: readonly string[] = [
 	'req.headers.authorization',
 	'req.headers.cookie',
 	'res.headers["set-cookie"]',
