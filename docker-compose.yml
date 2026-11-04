@@ -1,0 +1,39 @@
+name: rnd
+
+services:
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rnd}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rnd}
+      POSTGRES_DB: ${POSTGRES_DB:-rnd}
+    ports:
+      # Bound to localhost only: this is a local development database.
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      # Mounted one level above `data` so it works for Postgres 18+ (which
+      # keeps a versioned subdirectory) as well as older images.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    # A cache and rate-limit store: nothing here is worth persisting.
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    ports:
+      # Bound to localhost only: this is a local development instance.
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Environment and secrets (.env.example is committed on purpose)
+.env
+.env.*
+!.env.example
+
+# Logs and runtime files
+*.log
+npm-debug.log*
+pnpm-debug.log*
+logs/
+pids/
+*.pid
+
+# Test and coverage output
+coverage/
+.nyc_output/
+.vitest/
+
+# Local data (Postgres and Redis run in Docker volumes, not in the repo)
+*.sqlite
+*.sqlite3
+*.db
+dump.rdb
+appendonly.aof
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Scratch and tooling caches
+.cache/
+.eslintcache
+.fallow/
+.claude/settings.local.json
