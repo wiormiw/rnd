@@ -4,7 +4,7 @@ import { redisEnvSchema } from '../infrastructure/cache/env.js';
 
 const ms = (min = 0) => z.coerce.number().int().min(min);
 
-export const envSchema = z.object({
+const envSchema = z.object({
 	NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 	HOST: z.string().default('0.0.0.0'),
 	PORT: z.coerce.number().int().min(1).max(65535).default(3000),
@@ -61,7 +61,7 @@ function valueAt(root: unknown, path: readonly PropertyKey[]): unknown {
  * Unset and blank values are treated as absent, so `.default()` and `.optional()`
  * apply to them. All problems are reported at once, one line per variable.
  */
-export function loadEnv<Schema extends z.ZodType>(
+function loadEnv<Schema extends z.ZodType>(
 	schema: Schema,
 	raw: Record<string, string | undefined>,
 ): z.infer<Schema> {
