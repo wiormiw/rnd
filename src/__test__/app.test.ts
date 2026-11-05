@@ -90,6 +90,38 @@ describe('memos', () => {
 		expect(page.items.map((memo: { title: string }) => memo.title)).toEqual(['b', 'a']);
 	});
 
+	it('patches only the given fields and ignores server-owned ones', async () => {
+		await using app = buildTestApp();
+		const memo = (
+			await app.inject({ method: 'POST', url: '/memos', payload: { title: 'a', body: 'keep' } })
+		).json();
+
+		const res = await app.inject({
+			method: 'PATCH',
+			url: `/memos/${memo.id}`,
+			payload: { title: '  b  ' },
+		});
+		expect(res.statusCode).toBe(200);
+		expect(res.json()).toEqual({ ...memo, title: 'b' });
+
+		const forged = await app.inject({
+			method: 'PATCH',
+			url: `/memos/${memo.id}`,
+			payload: { body: 'x', id: '0b8c3a4e-6f5d-4c1e-9a77-3c2f1d9e8b10' },
+		});
+		expect(forged.json()).toMatchObject({ id: memo.id, body: 'x' });
+	});
+
+	it('rejects an empty or invalid patch with 400, and an unknown id with 404', async () => {
+		await using app = buildTestApp();
+		const id = '0b8c3a4e-6f5d-4c1e-9a77-3c2f1d9e8b10';
+		const patch = (url: string, payload: object) => app.inject({ method: 'PATCH', url, payload });
+
+		expect((await patch(`/memos/${id}`, {})).statusCode).toBe(400);
+		expect((await patch(`/memos/${id}`, { title: '' })).statusCode).toBe(400);
+		expect((await patch(`/memos/${id}`, { title: 'ok' })).statusCode).toBe(404);
+	});
+
 	it('rejects bad pagination with 400', async () => {
 		await using app = buildTestApp();
 		const res = await app.inject({ method: 'GET', url: '/memos?limit=1000' });

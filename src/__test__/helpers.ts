@@ -27,6 +27,16 @@ export function createInMemoryMemoRepository(): MemoRepository {
 		async findById(id) {
 			return rows.get(id);
 		},
+		async update(id, patch) {
+			const current = rows.get(id);
+			if (!current) return undefined;
+			const next: Memo = {
+				...current,
+				...Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined)),
+			};
+			rows.set(id, next);
+			return next;
+		},
 		async list({ limit, offset }) {
 			const newestFirst = [...rows.values()].toReversed();
 			return { items: newestFirst.slice(offset, offset + limit), total: rows.size };
