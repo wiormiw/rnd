@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { ERROR_CODES } from './errors.js';
+import { createSchemaFactory } from 'drizzle-orm/zod';
 
 /** Shapes shared by every module. Module-specific schemas live next to the module. */
 
@@ -44,3 +45,9 @@ export const errorResponses = {
 	429: errorResponse,
 	500: errorResponse,
 } as const;
+
+export const { createSelectSchema, createInsertSchema, createUpdateSchema } = createSchemaFactory({
+	coerce: {
+		date: true,
+	},
+});
