@@ -4,15 +4,16 @@ import { currentLogger } from '../../lib/request-context.js';
 import { err, fromNullable, ok, type Result } from '../../lib/result.js';
 import type { Page, Pagination } from '../../lib/schemas.js';
 import type { MemoRepository } from './repository.js';
-import type { CreateMemoInput, Memo } from './schema.js';
+import type { Memo, MemoInsert, MemoUpdate } from './schema.js';
 
 /**
  * Business rules. Expected failures come back as `Result` errors built by the
  * `errors` factory: nothing here knows about HTTP.
  */
 export interface MemoService {
-	create(input: CreateMemoInput): Promise<Result<Memo>>;
+	create(input: MemoInsert): Promise<Result<Memo>>;
 	get(id: string): Promise<Result<Memo>>;
+	update(id: string, patch: MemoUpdate): Promise<Result<Memo>>;
 	list(page: Pagination): Promise<Result<Page<Memo>>>;
 	remove(id: string): Promise<Result<void>>;
 }
@@ -33,6 +34,13 @@ export function createMemoService({ repository, logger }: MemoServiceDeps): Memo
 
 		async get(id) {
 			return fromNullable(await repository.findById(id), () => errors.notFound('memo', id));
+		},
+
+		async update(id, patch) {
+			const memo = await repository.update(id, patch);
+			if (!memo) return err(errors.notFound('memo', id));
+			currentLogger(logger).info({ memoId: id }, 'memo updated');
+			return ok(memo);
 		},
 
 		async list(page) {

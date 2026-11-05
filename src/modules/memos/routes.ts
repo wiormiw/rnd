@@ -2,7 +2,7 @@ import type { FastifyPluginAsyncZod } from '@fastify/type-provider-zod';
 import * as z from 'zod';
 import { unwrap } from '../../lib/result.js';
 import { errorResponses, idParams, paginated, paginationQuery } from '../../lib/schemas.js';
-import { createMemoBody, memoSchema } from './schema.js';
+import { memoInsertSchema, memoSchema, memoUpdateSchema } from './schema.js';
 
 /**
  * Thin edge: parse and validate (schemas), call the service, leave Result-land
@@ -13,7 +13,7 @@ export const memoRoutes: FastifyPluginAsyncZod = async (app) => {
 
 	app.post(
 		'/',
-		{ schema: { body: createMemoBody, response: { 201: memoSchema, ...errorResponses } } },
+		{ schema: { body: memoInsertSchema, response: { 201: memoSchema, ...errorResponses } } },
 		async (request, reply) => {
 			const memo = unwrap(await memos.create(request.body));
 			return reply.code(201).send(memo);
@@ -35,6 +35,18 @@ export const memoRoutes: FastifyPluginAsyncZod = async (app) => {
 		'/:id',
 		{ schema: { params: idParams, response: { 200: memoSchema, ...errorResponses } } },
 		async (request) => unwrap(await memos.get(request.params.id)),
+	);
+
+	app.patch(
+		'/:id',
+		{
+			schema: {
+				params: idParams,
+				body: memoUpdateSchema,
+				response: { 200: memoSchema, ...errorResponses },
+			},
+		},
+		async (request) => unwrap(await memos.update(request.params.id, request.body)),
 	);
 
 	app.delete(
