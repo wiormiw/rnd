@@ -4,9 +4,15 @@ import type { Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import supertest from 'supertest';
 import { AppModule } from '../app.module.js';
+import { configureApp } from '../configure-app.js';
 import { ConfigService } from '../config/config.service.js';
 import { DatabaseService } from '../database/database.service.js';
 import { loadConfig, type Env } from '../lib/config.js';
+import { CardsRepository } from '../cards/cards.repository.js';
+import type { Card, CardInsert, CardUpdate } from '../cards/card.schema.js';
+import { CurriculumRepository } from '../curriculum/curriculum.repository.js';
+import type { TopicInsert, TopicRow, TopicUpdate } from '../curriculum/topic.schema.js';
+import type { Edge } from '../engines/index.js';
 import { MemosRepository } from '../memos/memos.repository.js';
 import type { Memo, MemoInsert, MemoUpdate } from '../memos/memo.schema.js';
 import type { Pagination } from '../common/schemas.js';
@@ -26,7 +32,29 @@ export type MemoRepositoryLike = Pick<
 	'insert' | 'findById' | 'update' | 'list' | 'remove'
 >;
 
-export function createInMemoryMemoRepository(): MemoRepositoryLike {
+/** State shared by the in-memory repositories so cross-module behaviour is testable. */
+export interface InMemoryStore {
+	topics: Map<string, TopicRow>;
+	edges: Edge[];
+	cards: Map<string, Card>;
+	memoIds: Set<string>;
+	/** Card ids that have a PENDING action item. */
+	pendingCardIds: Set<string>;
+}
+
+function createInMemoryStore(): InMemoryStore {
+	return {
+		topics: new Map(),
+		edges: [],
+		cards: new Map(),
+		memoIds: new Set(),
+		pendingCardIds: new Set(),
+	};
+}
+
+export function createInMemoryMemoRepository(
+	store: InMemoryStore = createInMemoryStore(),
+): MemoRepositoryLike {
 	const rows = new Map<string, Memo>();
 	return {
 		async insert(input: MemoInsert) {
@@ -37,6 +65,7 @@ export function createInMemoryMemoRepository(): MemoRepositoryLike {
 				...input,
 			} as Memo;
 			rows.set(memo.id, memo);
+			store.memoIds.add(memo.id);
 			return memo;
 		},
 		async findById(id: string) {
@@ -47,7 +76,7 @@ export function createInMemoryMemoRepository(): MemoRepositoryLike {
 			if (!current) return undefined;
 			const next: Memo = {
 				...current,
-				...Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined)),
+				...definedOnly(patch),
 			};
 			rows.set(id, next);
 			return next;
@@ -57,7 +86,159 @@ export function createInMemoryMemoRepository(): MemoRepositoryLike {
 			return { items: newestFirst.slice(offset, offset + limit), total: rows.size };
 		},
 		async remove(id: string) {
+			store.memoIds.delete(id);
 			return rows.delete(id);
+		},
+	};
+}
+
+type CurriculumRepositoryLike = Pick<
+	CurriculumRepository,
+	| 'insertTopic'
+	| 'findTopic'
+	| 'updateTopic'
+	| 'removeTopic'
+	| 'listTopics'
+	| 'listEdges'
+	| 'addPrerequisite'
+	| 'removePrerequisite'
+	| 'masteryInputs'
+>;
+
+/** Drops `undefined` values, like a SQL UPDATE that skips unset columns. */
+function definedOnly(patch: object): object {
+	return Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
+}
+
+let tick = 0;
+/** Strictly increasing timestamps, so createdAt ordering is deterministic. */
+const nextDate = () => new Date(Date.UTC(2026, 0, 1) + tick++);
+
+function createInMemoryCurriculumRepository(store: InMemoryStore): CurriculumRepositoryLike {
+	return {
+		async insertTopic(input: TopicInsert) {
+			const now = nextDate();
+			const topic: TopicRow = { id: randomUUID(), createdAt: now, updatedAt: now, ...input };
+			store.topics.set(topic.id, topic);
+			return topic;
+		},
+		async findTopic(id: string) {
+			return store.topics.get(id);
+		},
+		async updateTopic(id: string, patch: TopicUpdate) {
+			const current = store.topics.get(id);
+			if (!current) return undefined;
+			const next: TopicRow = {
+				...current,
+				...definedOnly(patch),
+				updatedAt: nextDate(),
+			};
+			store.topics.set(id, next);
+			return next;
+		},
+		async removeTopic(id: string) {
+			if (!store.topics.delete(id)) return false;
+			store.edges = store.edges.filter((e) => e.topicId !== id && e.prerequisiteId !== id);
+			for (const card of store.cards.values()) {
+				if (card.topicId === id) store.cards.delete(card.id);
+			}
+			return true;
+		},
+		async listTopics() {
+			return [...store.topics.values()].toSorted(
+				(a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id),
+			);
+		},
+		async listEdges() {
+			return [...store.edges];
+		},
+		async addPrerequisite(topicId, prerequisiteId, check) {
+			const cycle = check([...store.edges]);
+			if (cycle) return { cycle };
+			const exists = store.edges.some(
+				(e) => e.topicId === topicId && e.prerequisiteId === prerequisiteId,
+			);
+			if (!exists) store.edges.push({ topicId, prerequisiteId });
+			return { added: !exists };
+		},
+		async removePrerequisite(topicId: string, prerequisiteId: string) {
+			const before = store.edges.length;
+			store.edges = store.edges.filter(
+				(e) => !(e.topicId === topicId && e.prerequisiteId === prerequisiteId),
+			);
+			return store.edges.length < before;
+		},
+		async masteryInputs() {
+			return {
+				cards: [...store.cards.values()].map((c) => ({
+					id: c.id,
+					topicId: c.topicId,
+					repetition: c.smRepetition,
+				})),
+				pendingCardIds: [...store.pendingCardIds],
+			};
+		},
+	};
+}
+
+type CardsRepositoryLike = Pick<
+	CardsRepository,
+	'insert' | 'findById' | 'update' | 'remove' | 'listByTopic' | 'memoExists' | 'topicExists'
+>;
+
+function createInMemoryCardsRepository(store: InMemoryStore): CardsRepositoryLike {
+	return {
+		async insert(topicId: string, input: CardInsert) {
+			const now = nextDate();
+			const card: Card = {
+				id: randomUUID(),
+				topicId,
+				memoId: input.memoId ?? null,
+				front: input.front,
+				back: input.back,
+				estimatedMinutes: input.estimatedMinutes,
+				priorityWeight: input.priorityWeight,
+				smInterval: 0,
+				smRepetition: 0,
+				smEaseFactor: 2.5,
+				nextReviewAt: now,
+				createdAt: now,
+				updatedAt: now,
+			};
+			store.cards.set(card.id, card);
+			return card;
+		},
+		async findById(id: string) {
+			return store.cards.get(id);
+		},
+		async update(id: string, patch: CardUpdate) {
+			const current = store.cards.get(id);
+			if (!current) return undefined;
+			const next: Card = {
+				...current,
+				...definedOnly(patch),
+				updatedAt: nextDate(),
+			};
+			store.cards.set(id, next);
+			return next;
+		},
+		async remove(id: string) {
+			store.pendingCardIds.delete(id);
+			return store.cards.delete(id);
+		},
+		async listByTopic(topicId: string, { limit, offset }: Pagination) {
+			const all = [...store.cards.values()]
+				.filter((c) => c.topicId === topicId)
+				.toSorted(
+					(a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id),
+				);
+			return { items: all.slice(offset, offset + limit), total: all.length };
+		},
+		async memoExists(id: string) {
+			return store.memoIds.has(id);
+		},
+		async topicExists(id: string) {
+			return store.topics.has(id);
 		},
 	};
 }
@@ -82,6 +263,8 @@ export function createFakeBucket(
 }
 
 export interface TestAppOptions {
+	/** Shared by the in-memory curriculum, cards and (default) memo repositories. */
+	store?: InMemoryStore;
 	repository?: MemoRepositoryLike;
 	bucket?: TokenBucket;
 	/** Environment overrides, e.g. `{ RATE_LIMIT_FAIL_OPEN: 'false' }`. */
@@ -101,7 +284,8 @@ export interface TestAppOptions {
  * Use as `await using app = await buildTestApp()`.
  */
 export async function buildTestApp({
-	repository = createInMemoryMemoRepository(),
+	store = createInMemoryStore(),
+	repository = createInMemoryMemoRepository(store),
 	bucket = createFakeBucket().bucket,
 	env = {},
 	db = { execute: async () => [] },
@@ -127,9 +311,14 @@ export async function buildTestApp({
 		.useValue(bucket)
 		.overrideProvider(MemosRepository)
 		.useValue(repository)
+		.overrideProvider(CurriculumRepository)
+		.useValue(createInMemoryCurriculumRepository(store))
+		.overrideProvider(CardsRepository)
+		.useValue(createInMemoryCardsRepository(store))
 		.compile();
 
 	const app = moduleRef.createNestApplication(new NodeAdapter(), { logger: false });
+	configureApp(app);
 	await app.init();
 	// supertest attaches listeners per request; concurrent tests would trip Node's default limit.
 	app.getHttpServer().setMaxListeners(0);
@@ -138,6 +327,7 @@ export async function buildTestApp({
 
 	return Object.assign(agent, {
 		repository,
+		store,
 		bucket,
 		async [Symbol.asyncDispose]() {
 			await app.close();

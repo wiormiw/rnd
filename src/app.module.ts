@@ -6,13 +6,23 @@ import { DatabaseModule } from './database/database.module.js';
 import { RedisModule } from './redis/redis.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MemosModule } from './memos/memos.module.js';
+import { CurriculumModule } from './curriculum/curriculum.module.js';
+import { CardsModule } from './cards/cards.module.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware.js';
 import { SecurityHeadersMiddleware } from './common/middleware/security-headers.middleware.js';
 import { RateLimitGuard } from './common/guards/rate-limit.guard.js';
 
 @Module({
-	imports: [ConfigModule, DatabaseModule, RedisModule, HealthModule, MemosModule],
+	imports: [
+		ConfigModule,
+		DatabaseModule,
+		RedisModule,
+		HealthModule,
+		MemosModule,
+		CurriculumModule,
+		CardsModule,
+	],
 	providers: [
 		{ provide: APP_FILTER, useClass: AllExceptionsFilter },
 		{ provide: APP_GUARD, useClass: RateLimitGuard },
