@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module.js';
 import { MemosModule } from './memos/memos.module.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware.js';
+import { SecurityHeadersMiddleware } from './common/middleware/security-headers.middleware.js';
 import { RateLimitGuard } from './common/guards/rate-limit.guard.js';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe.js';
 
@@ -21,6 +22,6 @@ import { ZodValidationPipe } from './common/pipes/zod-validation.pipe.js';
 })
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer): void {
-		consumer.apply(RequestContextMiddleware).forRoutes('*');
+		consumer.apply(SecurityHeadersMiddleware, RequestContextMiddleware).forRoutes('*');
 	}
 }
