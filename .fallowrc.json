@@ -1,0 +1,7 @@
+{
+  "ignoreDependencies": [
+    "@nestjs/terminus",
+    "@nestjs/testing",
+    "supertest"
+  ]
+}
