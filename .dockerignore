@@ -1,0 +1,20 @@
+# Rebuilt inside the image
+node_modules
+dist
+*.tsbuildinfo
+
+# Secrets and local config (.env.example is harmless but not needed)
+.env
+.env.*
+
+# Not part of any image
+.git
+.claude
+.fallow
+.cache
+coverage
+docs
+*.md
+docker-compose.yml
+Dockerfile
+.dockerignore
