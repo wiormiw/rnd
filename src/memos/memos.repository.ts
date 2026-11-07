@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { count, desc, eq } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { DATABASE_TOKEN } from '../database/database.service.js';
-import { memos } from '../database/schema.js';
+import { memos, topics } from '../database/schema.js';
 import type { Pagination } from '../common/schemas.js';
 import type { Memo, MemoInsert, MemoUpdate } from './memo.schema.js';
 
@@ -44,5 +44,31 @@ export class MemosRepository {
 	async remove(id: string): Promise<boolean> {
 		const deleted = await this.db.delete(memos).where(eq(memos.id, id)).returning({ id: memos.id });
 		return deleted.length > 0;
+	}
+
+	async listByTopic(
+		topicId: string,
+		{ limit, offset }: Pagination,
+	): Promise<{ items: Memo[]; total: number }> {
+		const [items, [totals]] = await Promise.all([
+			this.db
+				.select()
+				.from(memos)
+				.where(eq(memos.topicId, topicId))
+				.orderBy(desc(memos.createdAt), desc(memos.id))
+				.limit(limit)
+				.offset(offset),
+			this.db.select({ total: count() }).from(memos).where(eq(memos.topicId, topicId)),
+		]);
+		return { items, total: totals?.total ?? 0 };
+	}
+
+	async topicExists(id: string): Promise<boolean> {
+		const rows = await this.db
+			.select({ id: topics.id })
+			.from(topics)
+			.where(eq(topics.id, id))
+			.limit(1);
+		return rows.length > 0;
 	}
 }

@@ -31,7 +31,7 @@ describe('rate limit guard', () => {
 		const { bucket, calls } = createFakeBucket();
 		await using app = await buildTestApp({ bucket, env: trustProxy });
 
-		const res = await app.get('/memos').set('X-Forwarded-For', '203.0.113.7');
+		const res = await app.get('/api/v1/memos').set('X-Forwarded-For', '203.0.113.7');
 
 		expect(res.status).toBe(200);
 		expect(calls).toHaveLength(1);
@@ -48,8 +48,8 @@ describe('rate limit guard', () => {
 		const { bucket, calls } = createFakeBucket();
 		await using app = await buildTestApp({ bucket, env: trustProxy });
 
-		await app.get('/memos').set('X-Forwarded-For', '198.51.100.1');
-		await app.get('/memos').set('X-Forwarded-For', '198.51.100.2');
+		await app.get('/api/v1/memos').set('X-Forwarded-For', '198.51.100.1');
+		await app.get('/api/v1/memos').set('X-Forwarded-For', '198.51.100.2');
 
 		expect(new Set(calls.map((call) => call.key)).size).toBe(2);
 	});
@@ -58,7 +58,7 @@ describe('rate limit guard', () => {
 		const { bucket } = createFakeBucket(() => denied);
 		await using app = await buildTestApp({ bucket });
 
-		const res = await app.get('/memos');
+		const res = await app.get('/api/v1/memos');
 
 		expect(res.status).toBe(429);
 		expect(res.body).toEqual({
@@ -78,7 +78,7 @@ describe('rate limit guard', () => {
 		repository.insert = async (input) => (inserted++, insert(input));
 		await using app = await buildTestApp({ bucket, repository });
 
-		const res = await app.post('/memos').send({ title: 'x' });
+		const res = await app.post('/api/v1/memos').send({ title: 'x' });
 
 		expect(res.status).toBe(429);
 		expect(inserted).toBe(0);
@@ -100,9 +100,9 @@ describe('rate limit guard', () => {
 			controllers: [ExpensiveController],
 		});
 
-		await app.get('/expensive').set('X-Forwarded-For', '192.0.2.9');
+		await app.get('/api/v1/expensive').set('X-Forwarded-For', '192.0.2.9');
 
-		expect(calls[0]?.key).toBe('rl:GET:/expensive:192.0.2.9');
+		expect(calls[0]?.key).toBe('rl:GET:/api/v1/expensive:192.0.2.9');
 		expect(calls[0]?.policy).toEqual({ capacity: 3, refillPerSecond: 1, cost: 2 });
 	});
 
@@ -110,7 +110,7 @@ describe('rate limit guard', () => {
 		const { bucket, calls } = createFakeBucket(() => denied);
 		await using app = await buildTestApp({ bucket, controllers: [OpenController] });
 
-		expect((await app.get('/open')).status).toBe(200);
+		expect((await app.get('/api/v1/open')).status).toBe(200);
 		expect(calls).toHaveLength(0);
 	});
 
@@ -118,7 +118,7 @@ describe('rate limit guard', () => {
 		const { bucket, calls } = createFakeBucket(() => denied);
 		await using app = await buildTestApp({ bucket, env: { RATE_LIMIT_ENABLED: 'false' } });
 
-		expect((await app.get('/memos')).status).toBe(200);
+		expect((await app.get('/api/v1/memos')).status).toBe(200);
 		expect(calls).toHaveLength(0);
 	});
 
@@ -129,7 +129,7 @@ describe('rate limit guard', () => {
 			env: { RATE_LIMIT_CAPACITY: '5', RATE_LIMIT_REFILL_PER_SECOND: '0.5' },
 		});
 
-		await app.get('/memos');
+		await app.get('/api/v1/memos');
 
 		expect(calls[0]?.policy).toEqual({ capacity: 5, refillPerSecond: 0.5, cost: 1 });
 	});
@@ -142,7 +142,7 @@ describe('when the bucket (Redis) fails', () => {
 		const { bucket } = createFakeBucket(broken);
 		await using app = await buildTestApp({ bucket });
 
-		const res = await app.get('/memos');
+		const res = await app.get('/api/v1/memos');
 
 		expect(res.status).toBe(200);
 		expect(res.headers['ratelimit-limit']).toBeUndefined();
@@ -152,7 +152,7 @@ describe('when the bucket (Redis) fails', () => {
 		const { bucket } = createFakeBucket(broken);
 		await using app = await buildTestApp({ bucket, env: { RATE_LIMIT_FAIL_OPEN: 'false' } });
 
-		const res = await app.get('/memos');
+		const res = await app.get('/api/v1/memos');
 
 		expect(res.status).toBe(503);
 		expect(res.body).toEqual({ code: 'unavailable', message: 'Service unavailable' });
@@ -163,7 +163,7 @@ describe('when the bucket (Redis) fails', () => {
 		const { bucket, calls } = createFakeBucket();
 		await using app = await buildTestApp({ bucket, env: { RATE_LIMIT_TIMEOUT_MS: '30' } });
 
-		await app.get('/memos');
+		await app.get('/api/v1/memos');
 		const signal = calls[0]?.signal;
 
 		expect(signal?.aborted).toBe(false);
