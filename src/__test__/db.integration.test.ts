@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { ActionItemsRepository } from '../action-items/action-items.repository.js';
 import { CardsRepository } from '../cards/cards.repository.js';
@@ -20,6 +20,8 @@ import { MemosRepository } from '../memos/memos.repository.js';
 import { ReviewsRepository, type ReviewDecision } from '../reviews/reviews.repository.js';
 import { ScheduleRepository } from '../schedule/schedule.repository.js';
 import { testEnv } from './helpers.js';
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Runs against a REAL, already-migrated Postgres, so it is opt-in:
@@ -237,6 +239,68 @@ describe.skipIf(!url)('repositories on a real Postgres', () => {
 		});
 	});
 
+	describe('applyReview edge cases', () => {
+		const now = new Date('2030-01-01T00:00:00.000Z');
+
+		it('stores the SM-2 ease-factor floor of 1.3 exactly (double precision)', async () => {
+			const topic = await makeTopic();
+			const card = await makeCard(topic.id);
+			await db.update(cards).set({ smEaseFactor: 1.3 }).where(eq(cards.id, card.id));
+			expect((await cardsRepo.findById(card.id))?.smEaseFactor).toBe(1.3);
+
+			const outcome = await reviews.applyReview(card.id, decider(0, now, null));
+
+			expect(outcome.kind).toBe('ok');
+			if (outcome.kind !== 'ok') return;
+			expect(outcome.card.smEaseFactor).toBe(1.3);
+			expect((await cardsRepo.findById(card.id))?.smEaseFactor).toBe(1.3);
+			const [log] = await db.select().from(reviewLogs).where(eq(reviewLogs.cardId, card.id));
+			expect(log?.previousEaseFactor).toBe(1.3);
+			expect(log?.newEaseFactor).toBe(1.3);
+		});
+
+		it('waits on the card row lock, then sees a PENDING item inserted by the lock holder', async () => {
+			const topic = await makeTopic();
+			const card = await makeCard(topic.id);
+			let release: () => void = () => {};
+			const hold = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			let markLocked: () => void = () => {};
+			const locked = new Promise<void>((resolve) => {
+				markLocked = resolve;
+			});
+
+			const holder = db.transaction(async (tx) => {
+				await tx.execute(sql`select id from cards where id = ${card.id} for update`);
+				markLocked();
+				await hold;
+				await tx.insert(actionItems).values({ cardId: card.id, title: 'held' });
+			});
+
+			try {
+				await locked;
+				let settled = false;
+				const review = reviews.applyReview(card.id, decider(5, now, null)).finally(() => {
+					settled = true;
+				});
+
+				await sleep(100);
+				expect(settled).toBe(false);
+
+				release();
+				await holder;
+
+				const outcome = await review;
+				expect(outcome.kind).toBe('pending');
+				expect(await logCount(card.id)).toBe(0);
+			} finally {
+				release();
+				await holder.catch(() => undefined);
+			}
+		});
+	});
+
 	describe('addPrerequisite', () => {
 		it('lets exactly one of two opposing concurrent edges win', async () => {
 			const a = await makeTopic();
@@ -254,6 +318,47 @@ describe.skipIf(!url)('repositories on a real Postgres', () => {
 				(edge) => [a.id, b.id].includes(edge.topicId) && [a.id, b.id].includes(edge.prerequisiteId),
 			);
 			expect(edges).toHaveLength(1);
+		});
+	});
+
+	describe('prerequisite edges', () => {
+		it('reports added: false for a duplicate edge and keeps a single row', async () => {
+			const a = await makeTopic();
+			const b = await makeTopic();
+			const check = (edges: Parameters<typeof wouldCreateCycle>[0]) =>
+				wouldCreateCycle(edges, a.id, b.id);
+
+			expect(await curriculum.addPrerequisite(a.id, b.id, check)).toEqual({ added: true });
+			expect(await curriculum.addPrerequisite(a.id, b.id, check)).toEqual({ added: false });
+
+			const rows = await db
+				.select()
+				.from(topicPrerequisites)
+				.where(eq(topicPrerequisites.topicId, a.id));
+			expect(rows).toHaveLength(1);
+		});
+	});
+
+	describe('topic cascade', () => {
+		it('deleting a topic removes its cards, review logs and action items', async () => {
+			const topic = await makeTopic();
+			const card = await makeCard(topic.id);
+			const outcome = await reviews.applyReview(
+				card.id,
+				decider(1, new Date('2030-01-01T00:00:00.000Z'), 'redo'),
+			);
+			expect(outcome.kind).toBe('ok');
+
+			const cardRows = () => db.select().from(cards).where(eq(cards.topicId, topic.id));
+			expect(await cardRows()).toHaveLength(1);
+			expect(await logCount(card.id)).toBe(1);
+			expect(await itemsOf(card.id)).toHaveLength(1);
+
+			expect(await curriculum.removeTopic(topic.id)).toBe(true);
+
+			expect(await cardRows()).toHaveLength(0);
+			expect(await logCount(card.id)).toBe(0);
+			expect(await itemsOf(card.id)).toHaveLength(0);
 		});
 	});
 
