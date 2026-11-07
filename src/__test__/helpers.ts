@@ -30,7 +30,12 @@ export function createInMemoryMemoRepository(): MemoRepositoryLike {
 	const rows = new Map<string, Memo>();
 	return {
 		async insert(input: MemoInsert) {
-			const memo: Memo = { id: randomUUID(), createdAt: new Date(), ...input } as Memo;
+			const memo: Memo = {
+				id: randomUUID(),
+				createdAt: new Date(),
+				topicId: input.topicId ?? null,
+				...input,
+			} as Memo;
 			rows.set(memo.id, memo);
 			return memo;
 		},

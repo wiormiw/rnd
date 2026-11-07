@@ -1,0 +1,1520 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "1691a52c-abd2-4183-a6ea-52655262bec6",
+  "prevIds": [
+    "9b0bcc7a-66dd-4e5c-af25-aab4583311ac"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_enum",
+      "statementTarget": [
+        "enum",
+        "public",
+        "action_item_status"
+      ],
+      "writes": [
+        "s|enum|public.action_item_status",
+        "n|enum|public.action_item_status",
+        "e|enum|public.action_item_status",
+        "n|type|public.action_item_status"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "action_items"
+      ],
+      "writes": [
+        "s|tbl|public.action_items",
+        "n|tbl|public.action_items",
+        "e|tbl|public.action_items",
+        "n|rel|public.action_items",
+        "n|type|public.action_items",
+        "n|rel|public.action_items_pkey"
+      ],
+      "reads": [
+        "n|sch|public",
+        "n|enum|public.action_item_status"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "cards"
+      ],
+      "writes": [
+        "s|tbl|public.cards",
+        "n|tbl|public.cards",
+        "e|tbl|public.cards",
+        "n|rel|public.cards",
+        "n|type|public.cards",
+        "n|rel|public.cards_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "review_logs"
+      ],
+      "writes": [
+        "s|tbl|public.review_logs",
+        "n|tbl|public.review_logs",
+        "e|tbl|public.review_logs",
+        "n|rel|public.review_logs",
+        "n|type|public.review_logs",
+        "n|rel|public.review_logs_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "topic_prerequisites"
+      ],
+      "writes": [
+        "s|tbl|public.topic_prerequisites",
+        "n|tbl|public.topic_prerequisites",
+        "e|tbl|public.topic_prerequisites",
+        "n|rel|public.topic_prerequisites",
+        "n|type|public.topic_prerequisites",
+        "n|rel|public.topic_prerequisites_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "topics"
+      ],
+      "writes": [
+        "s|tbl|public.topics",
+        "n|tbl|public.topics",
+        "e|tbl|public.topics",
+        "n|rel|public.topics",
+        "n|type|public.topics",
+        "n|rel|public.topics_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "memos",
+        "topic_id"
+      ],
+      "writes": [
+        "s|col|public.memos.topic_id",
+        "n|col|public.memos.topic_id",
+        "e|col|public.memos.topic_id"
+      ],
+      "reads": [
+        "n|tbl|public.memos",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "action_items",
+        "action_items_one_pending_per_card"
+      ],
+      "writes": [
+        "s|idx|public.action_items_one_pending_per_card",
+        "n|idx|public.action_items_one_pending_per_card",
+        "e|idx|public.action_items_one_pending_per_card",
+        "n|rel|public.action_items_one_pending_per_card"
+      ],
+      "reads": [
+        "n|tbl|public.action_items",
+        "n|sch|public",
+        "n|col|public.action_items.card_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "action_items",
+        "action_items_status_idx"
+      ],
+      "writes": [
+        "s|idx|public.action_items_status_idx",
+        "n|idx|public.action_items_status_idx",
+        "e|idx|public.action_items_status_idx",
+        "n|rel|public.action_items_status_idx"
+      ],
+      "reads": [
+        "n|tbl|public.action_items",
+        "n|sch|public",
+        "n|col|public.action_items.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "cards",
+        "cards_next_review_at_idx"
+      ],
+      "writes": [
+        "s|idx|public.cards_next_review_at_idx",
+        "n|idx|public.cards_next_review_at_idx",
+        "e|idx|public.cards_next_review_at_idx",
+        "n|rel|public.cards_next_review_at_idx"
+      ],
+      "reads": [
+        "n|tbl|public.cards",
+        "n|sch|public",
+        "n|col|public.cards.next_review_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "cards",
+        "cards_topic_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.cards_topic_id_idx",
+        "n|idx|public.cards_topic_id_idx",
+        "e|idx|public.cards_topic_id_idx",
+        "n|rel|public.cards_topic_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.cards",
+        "n|sch|public",
+        "n|col|public.cards.topic_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "memos",
+        "memos_topic_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.memos_topic_id_idx",
+        "n|idx|public.memos_topic_id_idx",
+        "e|idx|public.memos_topic_id_idx",
+        "n|rel|public.memos_topic_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.memos",
+        "n|sch|public",
+        "n|col|public.memos.topic_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "review_logs",
+        "review_logs_card_id_reviewed_at_idx"
+      ],
+      "writes": [
+        "s|idx|public.review_logs_card_id_reviewed_at_idx",
+        "n|idx|public.review_logs_card_id_reviewed_at_idx",
+        "e|idx|public.review_logs_card_id_reviewed_at_idx",
+        "n|rel|public.review_logs_card_id_reviewed_at_idx"
+      ],
+      "reads": [
+        "n|tbl|public.review_logs",
+        "n|sch|public",
+        "n|col|public.review_logs.card_id",
+        "n|col|public.review_logs.reviewed_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "topic_prerequisites",
+        "topic_prerequisites_prerequisite_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.topic_prerequisites_prerequisite_id_idx",
+        "n|idx|public.topic_prerequisites_prerequisite_id_idx",
+        "e|idx|public.topic_prerequisites_prerequisite_id_idx",
+        "n|rel|public.topic_prerequisites_prerequisite_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.topic_prerequisites",
+        "n|sch|public",
+        "n|col|public.topic_prerequisites.prerequisite_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "action_items"
+      ],
+      "writes": [
+        "s|fk|public.action_items.action_items_card_id_cards_id_fkey",
+        "n|fk|public.action_items.action_items_card_id_cards_id_fkey",
+        "e|fk|public.action_items.action_items_card_id_cards_id_fkey",
+        "n|con|public.action_items.action_items_card_id_cards_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.action_items",
+        "n|sch|public",
+        "n|tbl|public.cards",
+        "n|sch|public",
+        "n|col|public.action_items.card_id",
+        "n|col|public.cards.id",
+        "e|uniqueness|public.cards.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "cards"
+      ],
+      "writes": [
+        "s|fk|public.cards.cards_topic_id_topics_id_fkey",
+        "n|fk|public.cards.cards_topic_id_topics_id_fkey",
+        "e|fk|public.cards.cards_topic_id_topics_id_fkey",
+        "n|con|public.cards.cards_topic_id_topics_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.cards",
+        "n|sch|public",
+        "n|tbl|public.topics",
+        "n|sch|public",
+        "n|col|public.cards.topic_id",
+        "n|col|public.topics.id",
+        "e|uniqueness|public.topics.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "cards"
+      ],
+      "writes": [
+        "s|fk|public.cards.cards_memo_id_memos_id_fkey",
+        "n|fk|public.cards.cards_memo_id_memos_id_fkey",
+        "e|fk|public.cards.cards_memo_id_memos_id_fkey",
+        "n|con|public.cards.cards_memo_id_memos_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.cards",
+        "n|sch|public",
+        "n|tbl|public.memos",
+        "n|sch|public",
+        "n|col|public.cards.memo_id",
+        "n|col|public.memos.id",
+        "e|uniqueness|public.memos.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "memos"
+      ],
+      "writes": [
+        "s|fk|public.memos.memos_topic_id_topics_id_fkey",
+        "n|fk|public.memos.memos_topic_id_topics_id_fkey",
+        "e|fk|public.memos.memos_topic_id_topics_id_fkey",
+        "n|con|public.memos.memos_topic_id_topics_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.memos",
+        "n|sch|public",
+        "n|tbl|public.topics",
+        "n|sch|public",
+        "n|col|public.memos.topic_id",
+        "n|col|public.topics.id",
+        "e|uniqueness|public.topics.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "review_logs"
+      ],
+      "writes": [
+        "s|fk|public.review_logs.review_logs_card_id_cards_id_fkey",
+        "n|fk|public.review_logs.review_logs_card_id_cards_id_fkey",
+        "e|fk|public.review_logs.review_logs_card_id_cards_id_fkey",
+        "n|con|public.review_logs.review_logs_card_id_cards_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.review_logs",
+        "n|sch|public",
+        "n|tbl|public.cards",
+        "n|sch|public",
+        "n|col|public.review_logs.card_id",
+        "n|col|public.cards.id",
+        "e|uniqueness|public.cards.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "topic_prerequisites"
+      ],
+      "writes": [
+        "s|fk|public.topic_prerequisites.topic_prerequisites_topic_id_topics_id_fkey",
+        "n|fk|public.topic_prerequisites.topic_prerequisites_topic_id_topics_id_fkey",
+        "e|fk|public.topic_prerequisites.topic_prerequisites_topic_id_topics_id_fkey",
+        "n|con|public.topic_prerequisites.topic_prerequisites_topic_id_topics_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.topic_prerequisites",
+        "n|sch|public",
+        "n|tbl|public.topics",
+        "n|sch|public",
+        "n|col|public.topic_prerequisites.topic_id",
+        "n|col|public.topics.id",
+        "e|uniqueness|public.topics.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "topic_prerequisites"
+      ],
+      "writes": [
+        "s|fk|public.topic_prerequisites.topic_prerequisites_prerequisite_id_topics_id_fkey",
+        "n|fk|public.topic_prerequisites.topic_prerequisites_prerequisite_id_topics_id_fkey",
+        "e|fk|public.topic_prerequisites.topic_prerequisites_prerequisite_id_topics_id_fkey",
+        "n|con|public.topic_prerequisites.topic_prerequisites_prerequisite_id_topics_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.topic_prerequisites",
+        "n|sch|public",
+        "n|tbl|public.topics",
+        "n|sch|public",
+        "n|col|public.topic_prerequisites.prerequisite_id",
+        "n|col|public.topics.id",
+        "e|uniqueness|public.topics.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "action_items",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "cards",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "review_logs",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "topic_prerequisites",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "topics",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "action_item_status",
+        "values": [
+          "PENDING",
+          "DONE"
+        ],
+        "entityType": "enums"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "gen_random_uuid()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "card_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "title",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "status",
+        "type": "action_item_status",
+        "typeSchema": "public",
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'PENDING'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "spawned_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "completed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "gen_random_uuid()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "topic_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "memo_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "front",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "back",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "estimated_minutes",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "2",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "priority_weight",
+        "type": "real",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "1",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "sm_interval",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "sm_repetition",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "sm_ease_factor",
+        "type": "real",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "2.5",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "next_review_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "memos",
+        "name": "topic_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "gen_random_uuid()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "card_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "quality_score",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "time_spent_seconds",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "previous_interval",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "new_interval",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "previous_ease_factor",
+        "type": "real",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "new_ease_factor",
+        "type": "real",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "reviewed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topic_prerequisites",
+        "name": "topic_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topic_prerequisites",
+        "name": "prerequisite_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topics",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "gen_random_uuid()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topics",
+        "name": "title",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topics",
+        "name": "description",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "''",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topics",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topics",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "action_items_one_pending_per_card",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "card_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"status\" = 'PENDING'",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "action_items_status_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "status",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "cards_next_review_at_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "next_review_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "cards_topic_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "topic_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "memos",
+        "name": "memos_topic_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "topic_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "review_logs_card_id_reviewed_at_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "card_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "reviewed_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topic_prerequisites",
+        "name": "topic_prerequisites_prerequisite_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "prerequisite_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "action_items_card_id_cards_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "card_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "cards",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "cards_topic_id_topics_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "topic_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "topics",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "cards_memo_id_memos_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "memo_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "memos",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "memos",
+        "name": "memos_topic_id_topics_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "topic_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "topics",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "review_logs_card_id_cards_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "card_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "cards",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topic_prerequisites",
+        "name": "topic_prerequisites_topic_id_topics_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "topic_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "topics",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topic_prerequisites",
+        "name": "topic_prerequisites_prerequisite_id_topics_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "prerequisite_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "topics",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topic_prerequisites",
+        "name": "topic_prerequisites_pkey",
+        "columns": [
+          "topic_id",
+          "prerequisite_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "action_items",
+        "name": "action_items_pkey",
+        "columns": [
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "cards_pkey",
+        "columns": [
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "review_logs_pkey",
+        "columns": [
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topics",
+        "name": "topics_pkey",
+        "columns": [
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "cards_estimated_minutes_min",
+        "value": "\"estimated_minutes\" >= 1",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "cards_priority_weight_positive",
+        "value": "\"priority_weight\" > 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cards",
+        "name": "cards_sm_ease_factor_min",
+        "value": "\"sm_ease_factor\" >= 1.3",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "review_logs_quality_score_range",
+        "value": "\"quality_score\" between 0 and 5",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "review_logs",
+        "name": "review_logs_time_spent_non_negative",
+        "value": "\"time_spent_seconds\" >= 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "topic_prerequisites",
+        "name": "topic_prerequisites_no_self",
+        "value": "\"topic_id\" <> \"prerequisite_id\"",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

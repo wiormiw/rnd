@@ -35,7 +35,7 @@ describe('memoUpdateSchema', () => {
 
 describe('memoSchema', () => {
 	it('accepts a well-formed row and rejects a bad one', () => {
-		const row = { id, title: 'a', body: '', createdAt: new Date() };
+		const row = { id, title: 'a', body: '', topicId: null, createdAt: new Date() };
 		expect(memoSchema.safeParse(row).success).toBe(true);
 		expect(memoSchema.safeParse({ ...row, id: 'nope' }).success).toBe(false);
 		expect(memoSchema.safeParse({ ...row, title: null }).success).toBe(false);
