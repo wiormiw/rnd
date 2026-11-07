@@ -6,16 +6,8 @@ import type { Database } from '../database/client.js';
 import { DATABASE_TOKEN } from '../database/database.service.js';
 import { actionItems, cards, reviewLogs } from '../database/schema.js';
 import type { Pagination } from '../common/schemas.js';
-import type { Sm2Result } from '../engines/index.js';
+import type { ReviewDecision } from '../engines/index.js';
 import type { ReviewLog } from './review.schema.js';
-
-/** What the service decides about a review, given the locked card. */
-export interface ReviewDecision {
-	sm2: Sm2Result;
-	log: Omit<ReviewLog, 'id' | 'cardId'>;
-	/** Non-null spawns a remediation action item. */
-	actionItemTitle: string | null;
-}
 
 export type ApplyReviewOutcome =
 	| { kind: 'not_found' }

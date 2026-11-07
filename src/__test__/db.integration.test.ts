@@ -14,10 +14,10 @@ import {
 	topicPrerequisites,
 	topics,
 } from '../database/schema.js';
-import { calculateSM2, wouldCreateCycle } from '../engines/index.js';
+import { calculateSM2, wouldCreateCycle, type ReviewDecision } from '../engines/index.js';
 import { loadConfig } from '../lib/config.js';
 import { MemosRepository } from '../memos/memos.repository.js';
-import { ReviewsRepository, type ReviewDecision } from '../reviews/reviews.repository.js';
+import { ReviewsRepository } from '../reviews/reviews.repository.js';
 import { ScheduleRepository } from '../schedule/schedule.repository.js';
 import { testEnv } from './helpers.js';
 
