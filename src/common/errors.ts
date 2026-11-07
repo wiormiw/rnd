@@ -1,14 +1,12 @@
-// fallow-ignore-file unused-file
 /**
  * Business errors. They describe WHAT went wrong in domain terms and know
  * nothing about HTTP: the status code mapping lives at the edge, in
- * `plugins/error-handler.ts`.
+ * `common/filters/all-exceptions.filter.ts`.
  *
  * Convention: expected failures (not found, conflict...) are returned as a
  * `Result` carrying an `AppError`; unexpected ones (a bug, a dead database) are
  * thrown and become a generic 500 at the edge.
  */
-// fallow-ignore-next-line unused-export
 export const ERROR_CODES = [
 	'invalid',
 	'unauthorized',
@@ -28,7 +26,6 @@ export interface AppErrorOptions {
 	cause?: unknown;
 }
 
-// fallow-ignore-next-line unused-export
 export class AppError extends Error {
 	readonly code: ErrorCode;
 	readonly details: unknown;
@@ -41,13 +38,11 @@ export class AppError extends Error {
 	}
 }
 
-// fallow-ignore-next-line unused-export
 export function isAppError(value: unknown): value is AppError {
 	return value instanceof AppError;
 }
 
 /** The one place business errors are created. */
-// fallow-ignore-next-line unused-export
 export const errors = {
 	invalid: (message: string, details?: unknown) => new AppError('invalid', message, { details }),
 
@@ -74,3 +69,15 @@ export const errors = {
 
 	internal: (message: string, cause?: unknown) => new AppError('internal', message, { cause }),
 } as const;
+
+/** HTTP status code for each business error code. The only place that knows about HTTP. */
+export const STATUS_BY_CODE: Record<ErrorCode, number> = {
+	invalid: 422,
+	unauthorized: 401,
+	forbidden: 403,
+	not_found: 404,
+	conflict: 409,
+	rate_limited: 429,
+	unavailable: 503,
+	internal: 500,
+};

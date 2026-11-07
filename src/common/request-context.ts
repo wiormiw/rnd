@@ -1,4 +1,3 @@
-// fallow-ignore-file unused-file
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { Logger } from './logger.js';
 
