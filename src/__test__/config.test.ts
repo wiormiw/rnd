@@ -45,13 +45,13 @@ describe('loadConfig', () => {
 			DB_PREPARE: 'false',
 			DB_DEBUG: '1',
 			DB_SSL: 'require',
-			REQUEST_TIMEOUT_MS: '1000',
+			KEEP_ALIVE_TIMEOUT_MS: '90000',
 		});
 		expect(config.DB_MAX).toBe(5);
 		expect(config.DB_PREPARE).toBe(false);
 		expect(config.DB_DEBUG).toBe(true);
 		expect(config.DB_SSL).toBe('require');
-		expect(config.REQUEST_TIMEOUT_MS).toBe(1000);
+		expect(config.KEEP_ALIVE_TIMEOUT_MS).toBe(90000);
 	});
 
 	it('reports every problem, one per variable, and tells missing from invalid', () => {

@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createRedis } from '../infrastructure/cache/client.js';
+import { createRedis } from '../redis/client.js';
 import { loadConfig } from '../lib/config.js';
-import { Lifecycle, LifecycleError } from '../lib/lifecycle.js';
-import { createSilentLogger } from '../lib/logger.js';
+import { createSilentLogger } from '../common/logger.js';
 import { testEnv } from './helpers.js';
 
 const logger = createSilentLogger();
@@ -20,14 +19,13 @@ describe('createRedis', () => {
 			REDIS_STARTUP_RETRIES: '1',
 			REDIS_CONNECT_TIMEOUT_MS: '500',
 		});
-		const { resource, client } = createRedis(env, logger);
-		const lifecycle = new Lifecycle([resource], logger, { startMs: 5000 });
+		const { client, stopClient } = createRedis(env, logger);
 
 		const began = performance.now();
-		await expect(lifecycle.start()).rejects.toThrow(LifecycleError);
+		await expect(client.connect()).rejects.toThrow('could not reach redis');
+		await stopClient();
 
 		expect(performance.now() - began).toBeLessThan(3000);
-		expect(lifecycle.state).toBe('stopped');
 		expect(client.isOpen).toBe(false);
 	}, 10_000);
 });

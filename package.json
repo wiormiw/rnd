@@ -12,8 +12,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "start": "node --env-file-if-exists=.env dist/index.js",
-    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
+    "start": "node --env-file-if-exists=.env dist/main.js",
+    "dev": "tsx watch --env-file-if-exists=.env src/main.ts",
     "test": "vitest run",
     "format": "oxfmt src",
     "check": "oxfmt src --check",
@@ -25,11 +25,14 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "devDependencies": {
+    "@nestjs/testing": "^12.0.0",
     "@types/node": "^26.6.6",
+    "@types/supertest": "^6.0.2",
     "drizzle-kit": "1.0.0-rc.5",
     "fallow": "^3.38.1",
     "oxfmt": "^0.76.0",
     "oxlint": "^1.90.0",
+    "supertest": "^7.0.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
@@ -43,16 +46,16 @@
   },
   "packageManager": "pnpm@12.16.1",
   "dependencies": {
-    "@fastify/cors": "^11.4.0",
-    "@fastify/helmet": "^13.2.0",
-    "@fastify/type-provider-zod": "^1.0.3",
-    "close-with-grace": "^2.5.0",
+    "@nestjs/common": "^12.0.0",
+    "@nestjs/core": "^12.0.0",
+    "@nestjs/platform-node": "^12.0.0",
+    "@nestjs/terminus": "^12.0.0",
     "drizzle-orm": "1.0.0-rc.5",
-    "fastify": "^5.12.8",
-    "fastify-plugin": "^6.0.1",
     "pino": "^10.4.0",
     "postgres": "^4.0.0",
     "redis": "^6.3.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
     "zod": "^4.6.7"
   }
 }

@@ -1,6 +1,6 @@
 import * as z from 'zod';
-import { dbEnvSchema } from '../infrastructure/db/env.js';
-import { redisEnvSchema } from '../infrastructure/cache/env.js';
+import { dbEnvSchema } from '../database/env.js';
+import { redisEnvSchema } from '../redis/env.js';
 
 const ms = (min = 0) => z.coerce.number().int().min(min);
 
@@ -15,8 +15,7 @@ const envSchema = z.object({
 		.transform((value) => value.split(',').map((origin) => origin.trim()))
 		.optional(),
 
-	// HTTP server timeouts. 0 disables a timeout.
-	REQUEST_TIMEOUT_MS: ms().default(30_000),
+	// HTTP server timeouts.
 	KEEP_ALIVE_TIMEOUT_MS: ms().default(72_000),
 	/** Hard deadline for the whole graceful shutdown. Keep it above LIFECYCLE_STOP_TIMEOUT_MS. */
 	SHUTDOWN_TIMEOUT_MS: ms(1).default(15_000),
@@ -24,7 +23,6 @@ const envSchema = z.object({
 	// Infrastructure lifecycle timeouts (per resource).
 	LIFECYCLE_START_TIMEOUT_MS: ms(1).default(15_000),
 	LIFECYCLE_STOP_TIMEOUT_MS: ms(1).default(10_000),
-	LIFECYCLE_CHECK_TIMEOUT_MS: ms(1).default(2_000),
 
 	/** Trust X-Forwarded-For. Enable ONLY behind a proxy you control, or clients can spoof their IP. */
 	TRUST_PROXY: z.stringbool().default(false),

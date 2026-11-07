@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createSilentLogger } from '../lib/logger.js';
-import { currentLogger, requestContext, type RequestContext } from '../lib/request-context.js';
+import { createSilentLogger } from '../common/logger.js';
+import { currentLogger, requestContext, type RequestContext } from '../common/request-context.js';
 
 const logger = createSilentLogger();
 

@@ -1,10 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { createRedis } from '../infrastructure/cache/client.js';
+import { createRedis } from '../redis/client.js';
 import { loadConfig } from '../lib/config.js';
-import { Lifecycle } from '../lib/lifecycle.js';
-import { createSilentLogger } from '../lib/logger.js';
-import { createRedisTokenBucket } from '../plugins/rate-limit/token-bucket.js';
+import { createSilentLogger } from '../common/logger.js';
+import { createRedisTokenBucket } from '../redis/token-bucket.js';
 import { testEnv } from './helpers.js';
 
 /**
@@ -21,20 +20,17 @@ describe.skipIf(!url)('token bucket on a real Redis', () => {
 	const policy = { capacity: 2, refillPerSecond: 0.001, cost: 1 };
 	const signal = () => AbortSignal.timeout(2000);
 
-	it('connects through the lifecycle and answers health checks', async () => {
-		const { resource } = createRedis(env, logger);
-		await using lifecycle = new Lifecycle([resource], logger);
+	it('connects and answers PING', async () => {
+		await using redis = createRedis(env, logger);
+		await redis.client.connect();
 
-		await lifecycle.start();
-
-		expect(await lifecycle.check()).toMatchObject({ redis: { ok: true } });
+		expect(await redis.client.ping()).toBe('PONG');
 	});
 
 	it('limits atomically, and survives the script cache being flushed', async () => {
-		const { resource, client } = createRedis(env, logger);
-		await using lifecycle = new Lifecycle([resource], logger);
-		await lifecycle.start();
-		const bucket = createRedisTokenBucket(client);
+		await using redis = createRedis(env, logger);
+		await redis.client.connect();
+		const bucket = createRedisTokenBucket(redis.client);
 		const key = `it:${randomUUID()}`;
 
 		const first = await bucket(key, policy, signal());
@@ -44,18 +40,17 @@ describe.skipIf(!url)('token bucket on a real Redis', () => {
 		expect(third.retryAfterMs).toBeGreaterThan(0);
 
 		// Redis forgets the script: the next call must reload it transparently (NOSCRIPT -> EVAL).
-		await client.scriptFlush();
+		await redis.client.scriptFlush();
 		const afterFlush = await bucket(`it:${randomUUID()}`, policy, signal());
 		expect(afterFlush.allowed).toBe(true);
 
-		await client.del(key);
+		await redis.client.del(key);
 	});
 
 	it('never lets concurrent callers overspend the bucket', async () => {
-		const { resource, client } = createRedis(env, logger);
-		await using lifecycle = new Lifecycle([resource], logger);
-		await lifecycle.start();
-		const bucket = createRedisTokenBucket(client);
+		await using redis = createRedis(env, logger);
+		await redis.client.connect();
+		const bucket = createRedisTokenBucket(redis.client);
 		const key = `it:${randomUUID()}`;
 
 		const results = await Promise.all(
@@ -63,6 +58,6 @@ describe.skipIf(!url)('token bucket on a real Redis', () => {
 		);
 
 		expect(results.filter((r) => r.allowed)).toHaveLength(10);
-		await client.del(key);
+		await redis.client.del(key);
 	});
 });

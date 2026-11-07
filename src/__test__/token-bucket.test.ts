@@ -1,12 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import type { RedisClient } from '../infrastructure/cache/client.js';
+import type { RedisClient } from '../redis/client.js';
 import {
 	createRedisTokenBucket,
 	TOKEN_BUCKET_LUA,
 	TOKEN_BUCKET_SHA,
 	type BucketPolicy,
-} from '../plugins/rate-limit/token-bucket.js';
+} from '../redis/token-bucket.js';
 
 /**
  * The script is run by a real Lua 5.1 interpreter (the version Redis embeds)

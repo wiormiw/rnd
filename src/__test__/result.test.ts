@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { errors } from '../lib/errors.js';
-import { andThen, andThenAsync, err, fromNullable, map, ok, unwrap } from '../lib/result.js';
+import { errors } from '../common/errors.js';
+import { andThen, andThenAsync, err, fromNullable, map, ok, unwrap } from '../common/result.js';
 
 describe('Result', () => {
 	it('map transforms only successes', () => {

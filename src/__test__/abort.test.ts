@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { abortable, isTimeoutError, timeoutSignal } from '../lib/abort.js';
+import { abortable, isTimeoutError, timeoutSignal } from '../common/abort.js';
 
 describe('abortable', () => {
 	it('resolves with the work result', async () => {
