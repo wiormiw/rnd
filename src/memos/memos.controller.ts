@@ -53,3 +53,17 @@ export class MemosController {
 		unwrap(await this.service.remove(params.id));
 	}
 }
+
+/** `GET /topics/:id/memos`: lives with the memos it lists. */
+@Controller('topics')
+export class TopicMemosController {
+	constructor(private readonly service: MemosService) {}
+
+	@Get(':id/memos')
+	async list(
+		@Param(new ZodValidationPipe(idParams)) params: { id: string },
+		@Query(new ZodValidationPipe(paginationQuery)) query: { limit: number; offset: number },
+	): Promise<Page<Memo>> {
+		return unwrap(await this.service.listByTopic(params.id, query));
+	}
+}

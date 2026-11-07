@@ -150,7 +150,14 @@ describe('status', () => {
 		app.store.cards.set(c.id, { ...app.store.cards.get(c.id)!, smRepetition: 3 });
 		expect((await app.get(`/api/v1/topics/${a.id}`)).body.mastered).toBe(true);
 
-		app.store.pendingCardIds.add(c.id);
+		app.store.actionItems.set('item', {
+			id: 'item',
+			cardId: c.id,
+			title: 'Practice',
+			status: 'PENDING',
+			spawnedAt: new Date(),
+			completedAt: null,
+		});
 		expect((await app.get(`/api/v1/topics/${a.id}`)).body.mastered).toBe(false);
 	});
 });

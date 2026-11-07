@@ -18,12 +18,14 @@ const serverOwned = { id: true, createdAt: true } as const;
 export const memoInsertSchema = createInsertSchema(memos, {
 	title: z.string().trim().min(1).max(200),
 	body: z.string().max(50_000).default(''),
+	topicId: idSchema.nullable().optional(),
 }).omit(serverOwned);
 
 /** Partial update (PATCH): every field optional, but at least one must be present. */
 export const memoUpdateSchema = createUpdateSchema(memos, {
 	title: (s) => s.trim().min(1).max(200),
 	body: (s) => s.max(50_000),
+	topicId: idSchema.nullable().optional(),
 })
 	.omit(serverOwned)
 	.refine((patch) => Object.values(patch).some((v) => v !== undefined), {

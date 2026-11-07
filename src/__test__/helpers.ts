@@ -8,6 +8,12 @@ import { configureApp } from '../configure-app.js';
 import { ConfigService } from '../config/config.service.js';
 import { DatabaseService } from '../database/database.service.js';
 import { loadConfig, type Env } from '../lib/config.js';
+import { ActionItemsRepository } from '../action-items/action-items.repository.js';
+import type { ActionItem } from '../action-items/action-item.schema.js';
+import { CLOCK, type Clock } from '../common/clock.js';
+import { ReviewsRepository } from '../reviews/reviews.repository.js';
+import type { ReviewLog } from '../reviews/review.schema.js';
+import { ScheduleRepository } from '../schedule/schedule.repository.js';
 import { CardsRepository } from '../cards/cards.repository.js';
 import type { Card, CardInsert, CardUpdate } from '../cards/card.schema.js';
 import { CurriculumRepository } from '../curriculum/curriculum.repository.js';
@@ -29,7 +35,7 @@ export const testEnv = {
 /** The subset of the repository the service uses; the in-memory one implements it. */
 export type MemoRepositoryLike = Pick<
 	MemosRepository,
-	'insert' | 'findById' | 'update' | 'list' | 'remove'
+	'insert' | 'findById' | 'update' | 'list' | 'remove' | 'listByTopic' | 'topicExists'
 >;
 
 /** State shared by the in-memory repositories so cross-module behaviour is testable. */
@@ -38,9 +44,12 @@ export interface InMemoryStore {
 	edges: Edge[];
 	cards: Map<string, Card>;
 	memoIds: Set<string>;
-	/** Card ids that have a PENDING action item. */
-	pendingCardIds: Set<string>;
+	reviewLogs: ReviewLog[];
+	actionItems: Map<string, ActionItem>;
 }
+
+const pendingItemFor = (store: InMemoryStore, cardId: string) =>
+	[...store.actionItems.values()].find((i) => i.cardId === cardId && i.status === 'PENDING');
 
 function createInMemoryStore(): InMemoryStore {
 	return {
@@ -48,7 +57,8 @@ function createInMemoryStore(): InMemoryStore {
 		edges: [],
 		cards: new Map(),
 		memoIds: new Set(),
-		pendingCardIds: new Set(),
+		reviewLogs: [],
+		actionItems: new Map(),
 	};
 }
 
@@ -60,10 +70,10 @@ export function createInMemoryMemoRepository(
 		async insert(input: MemoInsert) {
 			const memo: Memo = {
 				id: randomUUID(),
-				createdAt: new Date(),
-				topicId: input.topicId ?? null,
+				createdAt: nextDate(),
 				...input,
-			} as Memo;
+				topicId: input.topicId ?? null,
+			};
 			rows.set(memo.id, memo);
 			store.memoIds.add(memo.id);
 			return memo;
@@ -89,6 +99,13 @@ export function createInMemoryMemoRepository(
 			store.memoIds.delete(id);
 			return rows.delete(id);
 		},
+		async listByTopic(topicId: string, { limit, offset }: Pagination) {
+			const matching = [...rows.values()].filter((m) => m.topicId === topicId).toReversed();
+			return { items: matching.slice(offset, offset + limit), total: matching.length };
+		},
+		async topicExists(id: string) {
+			return store.topics.has(id);
+		},
 	};
 }
 
@@ -113,6 +130,14 @@ function definedOnly(patch: object): object {
 let tick = 0;
 /** Strictly increasing timestamps, so createdAt ordering is deterministic. */
 const nextDate = () => new Date(Date.UTC(2026, 0, 1) + tick++);
+
+/** Mirrors the ON DELETE CASCADE of review logs and action items. */
+function removeCardData(store: InMemoryStore, cardId: string) {
+	store.reviewLogs = store.reviewLogs.filter((l) => l.cardId !== cardId);
+	for (const item of store.actionItems.values()) {
+		if (item.cardId === cardId) store.actionItems.delete(item.id);
+	}
+}
 
 function createInMemoryCurriculumRepository(store: InMemoryStore): CurriculumRepositoryLike {
 	return {
@@ -140,7 +165,9 @@ function createInMemoryCurriculumRepository(store: InMemoryStore): CurriculumRep
 			if (!store.topics.delete(id)) return false;
 			store.edges = store.edges.filter((e) => e.topicId !== id && e.prerequisiteId !== id);
 			for (const card of store.cards.values()) {
-				if (card.topicId === id) store.cards.delete(card.id);
+				if (card.topicId !== id) continue;
+				removeCardData(store, card.id);
+				store.cards.delete(card.id);
 			}
 			return true;
 		},
@@ -175,7 +202,9 @@ function createInMemoryCurriculumRepository(store: InMemoryStore): CurriculumRep
 					topicId: c.topicId,
 					repetition: c.smRepetition,
 				})),
-				pendingCardIds: [...store.pendingCardIds],
+				pendingCardIds: [...store.actionItems.values()]
+					.filter((i) => i.status === 'PENDING')
+					.map((i) => i.cardId),
 			};
 		},
 	};
@@ -223,7 +252,7 @@ function createInMemoryCardsRepository(store: InMemoryStore): CardsRepositoryLik
 			return next;
 		},
 		async remove(id: string) {
-			store.pendingCardIds.delete(id);
+			removeCardData(store, id);
 			return store.cards.delete(id);
 		},
 		async listByTopic(topicId: string, { limit, offset }: Pagination) {
@@ -239,6 +268,108 @@ function createInMemoryCardsRepository(store: InMemoryStore): CardsRepositoryLik
 		},
 		async topicExists(id: string) {
 			return store.topics.has(id);
+		},
+	};
+}
+
+function newestFirst<T>(rows: T[], { limit, offset }: Pagination) {
+	const sorted = rows.toReversed();
+	return { items: sorted.slice(offset, offset + limit), total: sorted.length };
+}
+
+type ReviewsRepositoryLike = Pick<ReviewsRepository, 'applyReview' | 'cardExists' | 'listByCard'>;
+
+function createInMemoryReviewsRepository(store: InMemoryStore): ReviewsRepositoryLike {
+	return {
+		async applyReview(cardId, decide) {
+			const card = store.cards.get(cardId);
+			if (!card) return { kind: 'not_found' };
+			const pending = pendingItemFor(store, cardId);
+			if (pending) return { kind: 'pending', actionItemId: pending.id };
+
+			const { sm2, log, actionItemTitle } = decide(card);
+			store.reviewLogs.push({ id: randomUUID(), cardId, ...log });
+			let actionItem: ActionItem | null = null;
+			if (actionItemTitle !== null) {
+				actionItem = {
+					id: randomUUID(),
+					cardId,
+					title: actionItemTitle,
+					status: 'PENDING',
+					spawnedAt: log.reviewedAt,
+					completedAt: null,
+				};
+				store.actionItems.set(actionItem.id, actionItem);
+			}
+			const updated: Card = {
+				...card,
+				smInterval: sm2.interval,
+				smRepetition: sm2.repetition,
+				smEaseFactor: sm2.easeFactor,
+				nextReviewAt: sm2.nextReviewAt,
+				updatedAt: log.reviewedAt,
+			};
+			store.cards.set(cardId, updated);
+			return { kind: 'ok', card: updated, actionItem };
+		},
+		async cardExists(id: string) {
+			return store.cards.has(id);
+		},
+		async listByCard(cardId: string, page: Pagination) {
+			return newestFirst(
+				store.reviewLogs.filter((l) => l.cardId === cardId),
+				page,
+			);
+		},
+	};
+}
+
+type ActionItemsRepositoryLike = Pick<ActionItemsRepository, 'list' | 'complete'>;
+
+function createInMemoryActionItemsRepository(store: InMemoryStore): ActionItemsRepositoryLike {
+	return {
+		async list({ status, limit, offset }) {
+			const matching = [...store.actionItems.values()].filter(
+				(i) => !status || i.status === status,
+			);
+			return newestFirst(matching, { limit, offset });
+		},
+		async complete(id: string, now: Date) {
+			const item = store.actionItems.get(id);
+			if (!item) return { kind: 'not_found' };
+			if (item.status === 'DONE') return { kind: 'already_done' };
+			const done: ActionItem = { ...item, status: 'DONE', completedAt: now };
+			store.actionItems.set(id, done);
+			const card = store.cards.get(item.cardId);
+			if (card) store.cards.set(card.id, { ...card, nextReviewAt: now, updatedAt: now });
+			return { kind: 'ok', item: done };
+		},
+	};
+}
+
+type ScheduleRepositoryLike = Pick<ScheduleRepository, 'dueCards'>;
+
+function createInMemoryScheduleRepository(store: InMemoryStore): ScheduleRepositoryLike {
+	return {
+		async dueCards(now: Date) {
+			return [...store.cards.values()].filter(
+				(c) => c.nextReviewAt <= now && !pendingItemFor(store, c.id),
+			);
+		},
+	};
+}
+
+/** A clock tests can move. */
+interface FakeClock extends Clock {
+	set(date: Date): void;
+}
+
+function createFakeClock(start: Date): FakeClock {
+	let current = start;
+	return {
+		now: () => current,
+		set(date) {
+			current = date;
 		},
 	};
 }
@@ -273,6 +404,8 @@ export interface TestAppOptions {
 	db?: { execute(query: unknown): Promise<unknown> };
 	/** Stand-in for Redis `PING` used by the readiness check. */
 	redisPing?: () => Promise<unknown>;
+	/** Initial time of the fake clock; move it later with `app.clock.set(date)`. */
+	now?: Date;
 	/** Extra controllers, e.g. probes that exercise a decorator or the request context. */
 	controllers?: Type<unknown>[];
 }
@@ -291,9 +424,12 @@ export async function buildTestApp({
 	db = { execute: async () => [] },
 	redisPing = async () => 'PONG',
 	controllers = [],
+	now = new Date(Date.UTC(2026, 5, 1)),
 }: TestAppOptions = {}) {
 	const config: Env = loadConfig({ ...testEnv, ...env });
 	const configStub = { get: <K extends keyof Env>(key: K) => config[key], getAll: () => config };
+
+	const clock = createFakeClock(now);
 
 	const moduleRef = await Test.createTestingModule({ imports: [AppModule], controllers })
 		.overrideProvider(ConfigService)
@@ -315,6 +451,14 @@ export async function buildTestApp({
 		.useValue(createInMemoryCurriculumRepository(store))
 		.overrideProvider(CardsRepository)
 		.useValue(createInMemoryCardsRepository(store))
+		.overrideProvider(ReviewsRepository)
+		.useValue(createInMemoryReviewsRepository(store))
+		.overrideProvider(ActionItemsRepository)
+		.useValue(createInMemoryActionItemsRepository(store))
+		.overrideProvider(ScheduleRepository)
+		.useValue(createInMemoryScheduleRepository(store))
+		.overrideProvider(CLOCK)
+		.useValue(clock)
 		.compile();
 
 	const app = moduleRef.createNestApplication(new NodeAdapter(), { logger: false });
@@ -328,6 +472,7 @@ export async function buildTestApp({
 	return Object.assign(agent, {
 		repository,
 		store,
+		clock,
 		bucket,
 		async [Symbol.asyncDispose]() {
 			await app.close();
