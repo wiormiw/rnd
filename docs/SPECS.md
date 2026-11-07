@@ -328,5 +328,5 @@ Fixed in the design plan. The code follows them, with the differences noted belo
    - OpenAPI description of the API, for the client.
 
 ### Known gaps
-- No PostgreSQL integration test. The three transactions in section 6.3 are verified only by reading the code.
+- The three transactions in section 6.3 are covered by `src/__test__/db.integration.test.ts`, which runs only when `DB_TEST_URL` is set. It is not part of the default `pnpm test` run.
 - No authentication. The API assumes a trusted local network.

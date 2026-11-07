@@ -64,7 +64,7 @@ Stop the local services with `pnpm infra:down`.
 | :--- | :--- |
 | `pnpm dev` | Run the server with reload |
 | `pnpm build` / `pnpm start` | Compile to `dist/` and run it |
-| `pnpm test` | Run the test suite (no services needed; Redis integration tests are skipped) |
+| `pnpm test` | Run the test suite (no services needed; Redis and PostgreSQL integration tests are skipped) |
 | `pnpm lint` | oxlint and type-check |
 | `pnpm format` / `pnpm check` | Format sources / check formatting |
 | `pnpm infra:up` / `infra:down` | Start / stop PostgreSQL and Redis |
@@ -80,7 +80,15 @@ To run the Redis integration tests against a live instance:
 REDIS_TEST_URL=redis://localhost:6379 pnpm test redis.integration
 ```
 
-There is no PostgreSQL integration test yet. The transactions that matter most (the review lock, the prerequisite advisory lock and the one-pending-task index) are not covered by an automated test against a real database.
+To run the PostgreSQL integration tests (the review lock, the prerequisite advisory lock, the one-pending-task index and the delete rules) against a migrated database:
+
+```bash
+pnpm infra:up
+DB_URL=postgres://rnd:rnd@localhost:5432/rnd pnpm db:migrate
+DB_TEST_URL=postgres://rnd:rnd@localhost:5432/rnd pnpm test db.integration
+```
+
+The tests create their own topics and delete them afterwards, so they are safe to run against the local development database.
 
 ## API
 
@@ -156,7 +164,7 @@ src/
   health/             Liveness and readiness endpoints
   common/             Shared code: Result, AppError, clock.ts (injectable wall clock), logger, request
                       context, abort helpers, plus the exception filter, rate-limit guard, middleware and Zod pipe
-  __test__/           Tests (engine unit tests, HTTP tests on in-memory repositories, Redis integration)
+  __test__/           Tests (engine unit tests, HTTP tests on in-memory repositories, Redis and PostgreSQL integration)
 drizzle/              Generated SQL migrations
 docs/SPECS.md         Technical specification
 ```
