@@ -1,6 +1,6 @@
 import * as z from 'zod';
-import { dbEnvSchema } from '../infrastructure/db/env.js';
-import { redisEnvSchema } from '../infrastructure/cache/env.js';
+import { dbEnvSchema } from '../database/env.js';
+import { redisEnvSchema } from '../redis/env.js';
 
 const ms = (min = 0) => z.coerce.number().int().min(min);
 

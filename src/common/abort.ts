@@ -1,9 +1,9 @@
-// fallow-ignore-file unused-file
 /**
  * Settle with `work`, or reject with `signal.reason` as soon as the signal
  * aborts. The work itself keeps running unless `onAbort` cancels it, so pass
  * one whenever the underlying operation can be cancelled.
  */
+// fallow-ignore-next-line unused-export
 export function abortable<T>(
 	work: Promise<T>,
 	signal: AbortSignal,
@@ -31,6 +31,7 @@ export function timeoutSignal(ms: number, ...parents: (AbortSignal | undefined)[
 	return AbortSignal.any([AbortSignal.timeout(ms), ...signals]);
 }
 
+// fallow-ignore-next-line unused-export
 export function isTimeoutError(reason: unknown): boolean {
 	return reason instanceof Error && reason.name === 'TimeoutError';
 }

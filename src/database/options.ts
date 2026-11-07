@@ -1,5 +1,5 @@
 import type { Options } from 'postgres';
-import type { Logger } from '../../lib/logger.js';
+import type { Logger } from '../common/logger.js';
 import type { DbEnv } from './env.js';
 
 /** Drop `undefined` entries so they are not sent as run-time parameters. */

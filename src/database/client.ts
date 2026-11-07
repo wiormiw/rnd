@@ -1,7 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Options } from 'postgres';
-import type { Logger } from '../../lib/logger.js';
-import type { Resource } from '../../lib/lifecycle.js';
+import type { Logger } from '../common/logger.js';
 import type { DbEnv } from './env.js';
 import { toPostgresOptions } from './options.js';
 
@@ -29,29 +28,10 @@ export function createDatabase(env: DbEnv, logger: Logger, overrides: Options = 
 	// Graceful only if the pool ever came up; otherwise there is nothing to drain.
 	const end = () => client.end({ timeout: ready ? env.DB_END_TIMEOUT : 0 });
 
-	const resource: Resource = {
-		name: 'db',
-		async start(signal) {
-			await ping(signal);
-			ready = true;
-		},
-		check: ping,
-		async stop(signal) {
-			// If the lifecycle gives up waiting, drop the connections immediately.
-			const force = () => void client.end({ timeout: 0 });
-			signal.addEventListener('abort', force, { once: true });
-			try {
-				await end();
-			} finally {
-				signal.removeEventListener('abort', force);
-			}
-		},
-	};
-
 	return {
 		db,
 		client,
-		resource,
+		ping,
 		/** `await using database = createDatabase(...)` closes the pool on scope exit. */
 		async [Symbol.asyncDispose]() {
 			await end();

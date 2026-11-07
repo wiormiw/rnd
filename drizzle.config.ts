@@ -11,7 +11,7 @@ if (!url) throw new Error('DB_URL is required');
 
 export default defineConfig({
 	dialect: 'postgresql',
-	schema: './src/infrastructure/db/schema.ts',
+	schema: './src/database/schema.ts',
 	out: './drizzle',
 	dbCredentials: { url },
 });

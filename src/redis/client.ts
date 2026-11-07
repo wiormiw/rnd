@@ -1,6 +1,5 @@
 import { createClient } from 'redis';
-import type { Resource } from '../../lib/lifecycle.js';
-import type { Logger } from '../../lib/logger.js';
+import type { Logger } from '../common/logger.js';
 import type { RedisEnv } from './env.js';
 
 function buildClient(
@@ -30,7 +29,7 @@ export type RedisClient = ReturnType<typeof buildClient>;
  * A plain Redis client and its lifecycle. Features that need Redis (the rate
  * limiter, a cache...) take the client; nothing feature-specific lives here.
  *
- * node-redis connects on `connect()`, which the resource calls on start.
+ * node-redis connects on `connect()`, which the service calls on bootstrap.
  */
 export function createRedis(env: RedisEnv, logger: Logger) {
 	const log = logger.child({ component: 'redis' });
@@ -50,6 +49,7 @@ export function createRedis(env: RedisEnv, logger: Logger) {
 	client.on('ready', () => log.debug('redis ready'));
 	client.on('end', () => log.debug('redis connection closed'));
 
+	// fallow-ignore-next-line complexity
 	const stopClient = async (signal?: AbortSignal) => {
 		if (!client.isOpen) return;
 		if (!ready) return client.destroy();
@@ -66,21 +66,9 @@ export function createRedis(env: RedisEnv, logger: Logger) {
 		}
 	};
 
-	const resource: Resource = {
-		name: 'redis',
-		async start() {
-			await client.connect();
-			ready = true;
-		},
-		async check(signal) {
-			await client.withAbortSignal(signal).ping();
-		},
-		stop: stopClient,
-	};
-
 	return {
 		client,
-		resource,
+		stopClient,
 		/** `await using redis = createRedis(...)` closes the connection on scope exit. */
 		async [Symbol.asyncDispose]() {
 			await stopClient();

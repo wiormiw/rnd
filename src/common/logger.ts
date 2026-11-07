@@ -1,4 +1,3 @@
-// fallow-ignore-file unused-file
 import { pino, type DestinationStream, type Logger, type LoggerOptions } from 'pino';
 
 export type { Logger };
@@ -43,7 +42,6 @@ interface ResponseLike {
  * Standalone pino logger. It knows nothing about Fastify, the config or any
  * infrastructure, so it can be created first and handed to everything else.
  */
-// fallow-ignore-next-line unused-export
 export function createLogger(options: CreateLoggerOptions = {}): Logger {
 	const { level = 'info', name, redact = [], bindings = {}, destination } = options;
 
