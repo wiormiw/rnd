@@ -82,10 +82,10 @@ Index on `topic_id`. Memos are raw notes. A memo may link to one topic.
 | `front` | text | not null |
 | `back` | text | not null |
 | `estimated_minutes` | integer | not null, default 2, check `>= 1` |
-| `priority_weight` | real | not null, default 1, check `> 0` |
+| `priority_weight` | double precision | not null, default 1, check `> 0` |
 | `sm_interval` | integer | not null, default 0 (days) |
 | `sm_repetition` | integer | not null, default 0 |
-| `sm_ease_factor` | real | not null, default 2.5, check `>= 1.3` |
+| `sm_ease_factor` | double precision | not null, default 2.5, check `>= 1.3` |
 | `next_review_at` | timestamptz | not null, default now() |
 | `created_at` / `updated_at` | timestamptz | not null, default now() |
 
@@ -102,7 +102,7 @@ Scheduling fields (`sm_*`, `next_review_at`) and `topic_id` are server-owned. Th
 | `quality_score` | integer | not null, check `between 0 and 5` |
 | `time_spent_seconds` | integer | not null, check `>= 0` |
 | `previous_interval` / `new_interval` | integer | not null |
-| `previous_ease_factor` / `new_ease_factor` | real | not null |
+| `previous_ease_factor` / `new_ease_factor` | double precision | not null |
 | `reviewed_at` | timestamptz | not null, default now() |
 
 Index on `(card_id, reviewed_at)`.
