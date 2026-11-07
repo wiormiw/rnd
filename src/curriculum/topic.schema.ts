@@ -1,6 +1,11 @@
 import * as z from 'zod';
 import { topics } from '../database/schema.js';
-import { createInsertSchema, createUpdateSchema, idSchema } from '../common/schemas.js';
+import {
+	atLeastOneField,
+	createInsertSchema,
+	createUpdateSchema,
+	idSchema,
+} from '../common/schemas.js';
 
 /** Server-owned columns: never accepted from a client. */
 const serverOwned = { id: true, createdAt: true, updatedAt: true } as const;
@@ -13,15 +18,14 @@ export const topicInsertSchema = createInsertSchema(topics, {
 	.strict();
 
 /** Partial update (PATCH): every field optional, but at least one must be present. */
-export const topicUpdateSchema = createUpdateSchema(topics, {
-	title: (s) => s.trim().min(1).max(200),
-	description: (s) => s.max(10_000),
-})
-	.omit(serverOwned)
-	.strict()
-	.refine((patch) => Object.values(patch).some((v) => v !== undefined), {
-		message: 'At least one field must be provided',
-	});
+export const topicUpdateSchema = atLeastOneField(
+	createUpdateSchema(topics, {
+		title: (s) => s.trim().min(1).max(200),
+		description: (s) => s.max(10_000),
+	})
+		.omit(serverOwned)
+		.strict(),
+);
 
 export const prerequisiteParams = z.object({ id: idSchema, prerequisiteId: idSchema });
 

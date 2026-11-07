@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import { memos } from '../database/schema.js';
 import {
+	atLeastOneField,
 	createInsertSchema,
 	createSelectSchema,
 	createUpdateSchema,
@@ -22,15 +23,13 @@ export const memoInsertSchema = createInsertSchema(memos, {
 }).omit(serverOwned);
 
 /** Partial update (PATCH): every field optional, but at least one must be present. */
-export const memoUpdateSchema = createUpdateSchema(memos, {
-	title: (s) => s.trim().min(1).max(200),
-	body: (s) => s.max(50_000),
-	topicId: idSchema.nullable().optional(),
-})
-	.omit(serverOwned)
-	.refine((patch) => Object.values(patch).some((v) => v !== undefined), {
-		message: 'At least one field must be provided',
-	});
+export const memoUpdateSchema = atLeastOneField(
+	createUpdateSchema(memos, {
+		title: (s) => s.trim().min(1).max(200),
+		body: (s) => s.max(50_000),
+		topicId: idSchema.nullable().optional(),
+	}).omit(serverOwned),
+);
 
 export type Memo = z.infer<typeof memoSchema>;
 export type MemoInsert = z.infer<typeof memoInsertSchema>;

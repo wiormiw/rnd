@@ -43,3 +43,11 @@ export const { createSelectSchema, createInsertSchema, createUpdateSchema } = cr
 		date: true,
 	},
 });
+
+/** For PATCH bodies: every field is optional, but an empty patch is rejected. */
+export const atLeastOneField = <Schema extends z.ZodType<Record<string, unknown>>>(
+	schema: Schema,
+) =>
+	schema.refine((patch) => Object.values(patch).some((v) => v !== undefined), {
+		message: 'At least one field must be provided',
+	});
