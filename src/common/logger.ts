@@ -72,7 +72,6 @@ export function createLogger(options: CreateLoggerOptions = {}): Logger {
 }
 
 /** A logger that discards everything. Handy in tests. */
-// fallow-ignore-next-line unused-export
 export function createSilentLogger(): Logger {
 	return createLogger({ level: 'silent' });
 }

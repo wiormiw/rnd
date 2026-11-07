@@ -16,7 +16,6 @@ export const paginationQuery = z.object({
 export type Pagination = z.infer<typeof paginationQuery>;
 
 /** Response envelope for any paginated list. */
-// fallow-ignore-next-line unused-export
 export const paginated = <Item extends z.ZodType>(item: Item) =>
 	z.object({
 		items: z.array(item),
@@ -33,21 +32,11 @@ export interface Page<Item> {
 }
 
 /** Every non-2xx response has this shape. */
-// fallow-ignore-next-line unused-export
 export const errorResponse = z.object({
 	code: z.enum(ERROR_CODES),
 	message: z.string(),
 	details: z.unknown().optional(),
 });
-
-/** Spread into a route's `response` schema to document the standard errors. */
-// fallow-ignore-next-line unused-export
-export const errorResponses = {
-	400: errorResponse,
-	404: errorResponse,
-	429: errorResponse,
-	500: errorResponse,
-} as const;
 
 export const { createSelectSchema, createInsertSchema, createUpdateSchema } = createSchemaFactory({
 	coerce: {

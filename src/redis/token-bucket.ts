@@ -16,7 +16,6 @@ import type { RedisClient } from './client.js';
  *
  * Returns { allowed (0|1), remaining (whole tokens), retry_after_ms, full_in_ms }.
  */
-// fallow-ignore-next-line unused-export
 export const TOKEN_BUCKET_LUA = `
 local capacity = tonumber(ARGV[1])
 local rate = tonumber(ARGV[2])
@@ -54,7 +53,6 @@ return { allowed, math.floor(tokens), retry_after_ms, full_in_ms }
 `;
 
 /** Redis identifies cached scripts by SHA1, so only this hash is sent per request. */
-// fallow-ignore-next-line unused-export
 export const TOKEN_BUCKET_SHA = createHash('sha1').update(TOKEN_BUCKET_LUA).digest('hex');
 
 export interface BucketPolicy {

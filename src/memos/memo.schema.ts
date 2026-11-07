@@ -8,7 +8,6 @@ import {
 } from '../common/schemas.js';
 
 // Response schema, kept for OpenAPI/response documentation wiring; not yet consumed.
-// fallow-ignore-next-line unused-export
 export const memoSchema = createSelectSchema(memos, {
 	id: idSchema,
 });
