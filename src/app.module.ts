@@ -4,13 +4,15 @@ import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from './config/config.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { RedisModule } from './redis/redis.module.js';
+import { HealthModule } from './health/health.module.js';
+import { MemosModule } from './memos/memos.module.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware.js';
 import { RateLimitGuard } from './common/guards/rate-limit.guard.js';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe.js';
 
 @Module({
-	imports: [ConfigModule, DatabaseModule, RedisModule],
+	imports: [ConfigModule, DatabaseModule, RedisModule, HealthModule, MemosModule],
 	providers: [
 		{ provide: APP_FILTER, useClass: AllExceptionsFilter },
 		{ provide: APP_GUARD, useClass: RateLimitGuard },

@@ -1,4 +1,3 @@
-// fallow-ignore-file unused-file
 import type { AppError } from './errors.js';
 
 export interface Ok<T> {
@@ -18,10 +17,12 @@ export const ok = <T>(value: T): Ok<T> => ({ ok: true, value });
 
 export const err = <E>(error: E): Err<E> => ({ ok: false, error });
 
+// fallow-ignore-next-line unused-export
 export function map<T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E> {
 	return result.ok ? ok(fn(result.value)) : result;
 }
 
+// fallow-ignore-next-line unused-export
 export function andThen<T, U, E>(
 	result: Result<T, E>,
 	fn: (value: T) => Result<U, E>,
@@ -29,6 +30,7 @@ export function andThen<T, U, E>(
 	return result.ok ? fn(result.value) : result;
 }
 
+// fallow-ignore-next-line unused-export
 export async function andThenAsync<T, U, E>(
 	result: Result<T, E>,
 	fn: (value: T) => Promise<Result<U, E>>,

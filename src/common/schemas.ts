@@ -1,4 +1,3 @@
-// fallow-ignore-file unused-file
 import * as z from 'zod';
 import { ERROR_CODES } from './errors.js';
 import { createSchemaFactory } from 'drizzle-orm/zod';
@@ -17,6 +16,7 @@ export const paginationQuery = z.object({
 export type Pagination = z.infer<typeof paginationQuery>;
 
 /** Response envelope for any paginated list. */
+// fallow-ignore-next-line unused-export
 export const paginated = <Item extends z.ZodType>(item: Item) =>
 	z.object({
 		items: z.array(item),
@@ -33,6 +33,7 @@ export interface Page<Item> {
 }
 
 /** Every non-2xx response has this shape. */
+// fallow-ignore-next-line unused-export
 export const errorResponse = z.object({
 	code: z.enum(ERROR_CODES),
 	message: z.string(),
@@ -40,6 +41,7 @@ export const errorResponse = z.object({
 });
 
 /** Spread into a route's `response` schema to document the standard errors. */
+// fallow-ignore-next-line unused-export
 export const errorResponses = {
 	400: errorResponse,
 	404: errorResponse,
