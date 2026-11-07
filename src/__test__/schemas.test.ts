@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { describe, expect, it } from 'vitest';
-import { errorResponse, idParams, paginated, paginationQuery } from '../lib/schemas.js';
+import { errorResponse, idParams, paginated, paginationQuery } from '../common/schemas.js';
 
 describe('paginationQuery', () => {
 	it('defaults and coerces query strings', () => {

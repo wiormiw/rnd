@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { memoInsertSchema, memoSchema, memoUpdateSchema } from '../modules/memos/schema.js';
+import { memoInsertSchema, memoSchema, memoUpdateSchema } from '../memos/memo.schema.js';
 
 const id = '0b8c3a4e-6f5d-4c1e-9a77-3c2f1d9e8b10';
 

@@ -1,7 +1,7 @@
 import * as z from 'zod';
 import { describe, expect, it } from 'vitest';
-import { isAppError } from '../lib/errors.js';
-import { rowParser } from '../lib/parse.js';
+import { isAppError } from '../common/errors.js';
+import { rowParser } from '../common/parse.js';
 
 describe('rowParser', () => {
 	const parseRow = rowParser(z.object({ id: z.number(), name: z.string() }), 'users');

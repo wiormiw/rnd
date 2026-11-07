@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createDatabase } from '../infrastructure/db/client.js';
-import { toPostgresOptions } from '../infrastructure/db/options.js';
+import { createDatabase } from '../database/client.js';
+import { toPostgresOptions } from '../database/options.js';
 import { loadConfig } from '../lib/config.js';
-import { Lifecycle, LifecycleError } from '../lib/lifecycle.js';
-import { createSilentLogger } from '../lib/logger.js';
+import { createSilentLogger } from '../common/logger.js';
 
 const logger = createSilentLogger();
 const url = 'postgres://rnd:rnd@127.0.0.1:5432/rnd';
@@ -115,16 +114,14 @@ describe('createDatabase', () => {
 		expect(database.client.options.max).toBe(2);
 	});
 
-	it('fails startup within the timeout when the database is unreachable, then cleans up', async () => {
+	it('fails the ping within the timeout when the database is unreachable', async () => {
 		const env = loadConfig({
 			DB_URL: 'postgres://rnd:rnd@127.0.0.1:1/rnd',
 			REDIS_URL: redis,
 			DB_END_TIMEOUT: '0',
 		});
-		const { resource } = createDatabase(env, logger);
-		const lifecycle = new Lifecycle([resource], logger, { startMs: 1500 });
+		await using database = createDatabase(env, logger);
 
-		await expect(lifecycle.start()).rejects.toThrow(LifecycleError);
-		expect(lifecycle.state).toBe('stopped');
+		await expect(database.ping(AbortSignal.timeout(1500))).rejects.toThrow();
 	}, 10_000);
 });

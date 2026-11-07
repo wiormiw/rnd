@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AppError, errors, isAppError } from '../lib/errors.js';
+import { AppError, errors, isAppError } from '../common/errors.js';
 
 describe('errors factory', () => {
 	it('builds AppErrors with a code and safe details', () => {
