@@ -33,7 +33,7 @@ What is running now:
 
 ## Stack
 
-- **Runtime:** Node.js 22+, TypeScript (ESM, NodeNext)
+- **Runtime:** Node.js 26+, TypeScript (ESM, NodeNext)
 - **HTTP:** NestJS 12 on `@nestjs/platform-node` (native Node HTTP, no Express or Fastify)
 - **Validation:** Zod 4, applied per parameter through a `ZodValidationPipe`
 - **Database:** PostgreSQL with Drizzle ORM and postgres.js
@@ -46,7 +46,7 @@ What is running now:
 
 ## Getting started
 
-Requirements: Node.js 22+, pnpm 12, Docker.
+Requirements: Node.js 26+, pnpm 12, Docker.
 
 ```bash
 pnpm install

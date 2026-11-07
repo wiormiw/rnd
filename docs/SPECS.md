@@ -25,7 +25,7 @@ The system runs locally without artificial intelligence models or cloud services
 
 | Component | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Runtime & Server** | Node.js 22+, NestJS 12 on `@nestjs/platform-node` | Native Node HTTP server, modules, lifecycle hooks, exception filters |
+| **Runtime & Server** | Node.js 26+, NestJS 12 on `@nestjs/platform-node` | Native Node HTTP server, modules, lifecycle hooks, exception filters |
 | **Validation** | Zod 4 | Request body, query and path validation, applied per parameter by `ZodValidationPipe` |
 | **Database & ORM** | PostgreSQL + Drizzle ORM | Relational state, transactions and row locks, over the `postgres.js` driver |
 | **Rate limiting** | Redis (`node-redis`) | Token-bucket state per client IP (Lua script). Also pinged by the readiness check. |
