@@ -123,7 +123,7 @@ All routes are under `/api/v1` except the two `/health` probes, which stay at th
 | GET | `/action-items` | Practice tasks, newest first. `status` (`PENDING` or `DONE`, optional). Paginated. |
 | POST | `/action-items/:id/complete` | Mark a practice task done. The card is due again immediately. 200. 404 if missing. 409 if already done. |
 
-Errors share one shape: `{ code, message, details? }`. Validation failures return 400 with `details` as a list of `{ path, message }`. Business conflicts return 409. Unknown routes return 404. Rate-limited responses return 429 with `Retry-After`.
+Errors share one shape: `{ code, message, details? }`. Validation failures return 400 with `details` as a list of `{ path, message }`. Business conflicts return 409. Unknown routes return 404 in the same shape, on any path (not only under `/api/v1`). Rate-limited responses return 429 with `Retry-After`.
 
 ## How it works
 

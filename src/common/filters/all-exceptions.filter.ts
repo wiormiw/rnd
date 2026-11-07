@@ -101,9 +101,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
 			}
 
 			if (status === 404) {
+				// `url` is relative to the /api/v1 mount; `originalUrl` is what the client sent.
+				const url = (req as IncomingMessage & { originalUrl?: string }).originalUrl ?? req.url;
 				return send(res, 404, {
 					code: 'not_found',
-					message: `Route ${req.method ?? 'UNKNOWN'} ${req.url ?? '/'} not found`,
+					message: `Route ${req.method ?? 'UNKNOWN'} ${url ?? '/'} not found`,
 				});
 			}
 

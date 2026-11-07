@@ -38,6 +38,6 @@ import { RateLimitGuard } from './common/guards/rate-limit.guard.js';
 })
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer): void {
-		consumer.apply(SecurityHeadersMiddleware, RequestContextMiddleware).forRoutes('*');
+		consumer.apply(SecurityHeadersMiddleware, RequestContextMiddleware).forRoutes('{*path}');
 	}
 }

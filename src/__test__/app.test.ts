@@ -140,12 +140,39 @@ describe('error handling at the edge', () => {
 		expect(res.status).toBe(400);
 	});
 
-	it('uses the same body for unknown routes', async () => {
-		await using app = await buildTestApp();
-		const res = await app.get('/api/v1/nope');
+	it.each(['/api/v1/nope', '/nope', '/a/b/c', '/api/nope', '/api/v1'])(
+		'uses the same body for unknown route %s',
+		async (path) => {
+			await using app = await buildTestApp();
+			const res = await app.get(path);
 
-		expect(res.status).toBe(404);
-		expect(res.body).toMatchObject({ code: 'not_found' });
+			expect(res.status).toBe(404);
+			expect(res.body).toMatchObject({ code: 'not_found', message: expect.any(String) });
+		},
+	);
+
+	it('names the requested path, prefix included, in the message', async () => {
+		await using app = await buildTestApp();
+
+		expect((await app.get('/api/v1/nope')).body.message).toBe('Route GET /api/v1/nope not found');
+		expect((await app.post('/nope')).body.message).toBe('Route POST /nope not found');
+	});
+
+	it.each(['post', 'put', 'patch', 'delete'] as const)(
+		'uses the same body for an unknown route with %s',
+		async (method) => {
+			await using app = await buildTestApp();
+			const res = await app[method]('/nope');
+
+			expect(res.status).toBe(404);
+			expect(res.body).toMatchObject({ code: 'not_found' });
+		},
+	);
+
+	it('does not serve API routes without the /api/v1 prefix', async () => {
+		await using app = await buildTestApp();
+		expect((await app.get('/memos')).status).toBe(404);
+		expect((await app.get('/api/v1/memos')).status).toBe(200);
 	});
 
 	it('maps malformed JSON to a 4xx invalid error', async () => {
@@ -172,6 +199,27 @@ describe('error handling at the edge', () => {
 		expect(res.status).toBe(500);
 		expect(res.body).toEqual({ code: 'internal', message: 'Internal server error' });
 		expect(res.text).not.toContain('hunter2');
+	});
+});
+
+describe('edge middleware', () => {
+	// /health* sits outside the /api/v1 prefix, and unknown paths match no route at all.
+	const paths = [
+		'/health',
+		'/health/ready',
+		'/api/v1/memos',
+		'/api/v1/does-not-exist',
+		'/does-not-exist',
+	];
+
+	it.each(paths)('GET %s carries the security headers and a request id', async (path) => {
+		await using app = await buildTestApp();
+		const res = await app.get(path);
+
+		expect(res.header['x-content-type-options']).toBe('nosniff');
+		expect(res.header['x-frame-options']).toBe('DENY');
+		expect(res.header['referrer-policy']).toBe('no-referrer');
+		expect(res.header['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
 	});
 });
 
