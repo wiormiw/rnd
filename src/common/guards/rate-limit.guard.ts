@@ -16,8 +16,9 @@ export const RATE_LIMIT_METADATA = 'rateLimit';
  * Decorate a controller or handler to opt out of rate limiting (`false`) or
  * give it its own bucket policy (overrides are merged onto the global defaults).
  */
-export const RateLimit = (policy: false | { capacity?: number; cost?: number }): MethodDecorator &
-	ClassDecorator => SetMetadata(RATE_LIMIT_METADATA, policy);
+export const RateLimit = (
+	policy: false | { capacity?: number; cost?: number },
+): MethodDecorator & ClassDecorator => SetMetadata(RATE_LIMIT_METADATA, policy);
 
 type RouteMeta = false | { capacity?: number; cost?: number };
 
@@ -47,10 +48,10 @@ export class RateLimitGuard implements CanActivate {
 		const enabled = this.config.get('RATE_LIMIT_ENABLED');
 		if (!enabled) return true;
 
-		const routeMeta = this.reflector.getAllAndOverride<RouteMeta | undefined>(
-			RATE_LIMIT_METADATA,
-			[context.getHandler(), context.getClass()],
-		);
+		const routeMeta = this.reflector.getAllAndOverride<RouteMeta | undefined>(RATE_LIMIT_METADATA, [
+			context.getHandler(),
+			context.getClass(),
+		]);
 		if (routeMeta === false) return true;
 
 		const req = context.switchToHttp().getRequest<IncomingMessage>();
