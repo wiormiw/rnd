@@ -1,12 +1,12 @@
 import { sql } from 'drizzle-orm';
 import {
 	check,
+	doublePrecision,
 	index,
 	integer,
 	pgEnum,
 	pgTable,
 	primaryKey,
-	real,
 	text,
 	timestamp,
 	uniqueIndex,
@@ -64,10 +64,10 @@ export const cards = pgTable(
 		front: text('front').notNull(),
 		back: text('back').notNull(),
 		estimatedMinutes: integer('estimated_minutes').notNull().default(2),
-		priorityWeight: real('priority_weight').notNull().default(1),
+		priorityWeight: doublePrecision('priority_weight').notNull().default(1),
 		smInterval: integer('sm_interval').notNull().default(0),
 		smRepetition: integer('sm_repetition').notNull().default(0),
-		smEaseFactor: real('sm_ease_factor').notNull().default(2.5),
+		smEaseFactor: doublePrecision('sm_ease_factor').notNull().default(2.5),
 		nextReviewAt: timestamp('next_review_at', { withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp('updated_at', { withTimezone: true })
@@ -95,8 +95,8 @@ export const reviewLogs = pgTable(
 		timeSpentSeconds: integer('time_spent_seconds').notNull(),
 		previousInterval: integer('previous_interval').notNull(),
 		newInterval: integer('new_interval').notNull(),
-		previousEaseFactor: real('previous_ease_factor').notNull(),
-		newEaseFactor: real('new_ease_factor').notNull(),
+		previousEaseFactor: doublePrecision('previous_ease_factor').notNull(),
+		newEaseFactor: doublePrecision('new_ease_factor').notNull(),
 		reviewedAt: timestamp('reviewed_at', { withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [

@@ -7,7 +7,7 @@ const fields = {
 	back: z.string().trim().min(1).max(10_000),
 	memoId: idSchema.nullable(),
 	estimatedMinutes: z.number().int().min(1).max(120),
-	priorityWeight: z.number().gt(0).max(10),
+	priorityWeight: z.number().min(0.001).max(10),
 };
 
 /**

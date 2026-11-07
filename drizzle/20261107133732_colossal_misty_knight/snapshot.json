@@ -1,0 +1,117 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "7c3264d3-96c8-4d8c-a6a3-cda19cbcf156",
+  "prevIds": [
+    "1691a52c-abd2-4183-a6ea-52655262bec6"
+  ],
+  "footprints": [
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "cards",
+        "priority_weight"
+      ],
+      "writes": [
+        "s|colprop|public.cards.priority_weight.type",
+        "s|colprop|public.cards.priority_weight.default"
+      ],
+      "reads": [
+        "n|tbl|public.cards",
+        "n|sch|public",
+        "n|col|public.cards.priority_weight"
+      ],
+      "sqlHash": "09af7980dffa68de"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "cards",
+        "sm_ease_factor"
+      ],
+      "writes": [
+        "s|colprop|public.cards.sm_ease_factor.type",
+        "s|colprop|public.cards.sm_ease_factor.default"
+      ],
+      "reads": [
+        "n|tbl|public.cards",
+        "n|sch|public",
+        "n|col|public.cards.sm_ease_factor"
+      ],
+      "sqlHash": "02dfeaa2655eaf7d"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "review_logs",
+        "previous_ease_factor"
+      ],
+      "writes": [
+        "s|colprop|public.review_logs.previous_ease_factor.type",
+        "s|colprop|public.review_logs.previous_ease_factor.default"
+      ],
+      "reads": [
+        "n|tbl|public.review_logs",
+        "n|sch|public",
+        "n|col|public.review_logs.previous_ease_factor"
+      ],
+      "sqlHash": "51f885e3d5db52d0"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "review_logs",
+        "new_ease_factor"
+      ],
+      "writes": [
+        "s|colprop|public.review_logs.new_ease_factor.type",
+        "s|colprop|public.review_logs.new_ease_factor.default"
+      ],
+      "reads": [
+        "n|tbl|public.review_logs",
+        "n|sch|public",
+        "n|col|public.review_logs.new_ease_factor"
+      ],
+      "sqlHash": "7255fd8b8d094ed5"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"cards\",\"priority_weight\"]",
+      "set": {
+        "type": "double precision"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"cards\",\"sm_ease_factor\"]",
+      "set": {
+        "type": "double precision"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"review_logs\",\"previous_ease_factor\"]",
+      "set": {
+        "type": "double precision"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"review_logs\",\"new_ease_factor\"]",
+      "set": {
+        "type": "double precision"
+      }
+    }
+  ]
+}
