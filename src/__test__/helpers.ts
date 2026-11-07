@@ -141,8 +141,7 @@ function removeCardData(store: InMemoryStore, cardId: string) {
 
 function createInMemoryCurriculumRepository(store: InMemoryStore): CurriculumRepositoryLike {
 	return {
-		async insertTopic(input: TopicInsert) {
-			const now = nextDate();
+		async insertTopic(input: TopicInsert, now: Date) {
 			const topic: TopicRow = { id: randomUUID(), createdAt: now, updatedAt: now, ...input };
 			store.topics.set(topic.id, topic);
 			return topic;
@@ -150,13 +149,13 @@ function createInMemoryCurriculumRepository(store: InMemoryStore): CurriculumRep
 		async findTopic(id: string) {
 			return store.topics.get(id);
 		},
-		async updateTopic(id: string, patch: TopicUpdate) {
+		async updateTopic(id: string, patch: TopicUpdate, now: Date) {
 			const current = store.topics.get(id);
 			if (!current) return undefined;
 			const next: TopicRow = {
 				...current,
 				...definedOnly(patch),
-				updatedAt: nextDate(),
+				updatedAt: now,
 			};
 			store.topics.set(id, next);
 			return next;
@@ -172,8 +171,9 @@ function createInMemoryCurriculumRepository(store: InMemoryStore): CurriculumRep
 			return true;
 		},
 		async listTopics() {
+			// Stable sort: ties keep insertion order, as a fake clock gives equal timestamps.
 			return [...store.topics.values()].toSorted(
-				(a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id),
+				(a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
 			);
 		},
 		async listEdges() {
@@ -217,8 +217,7 @@ type CardsRepositoryLike = Pick<
 
 function createInMemoryCardsRepository(store: InMemoryStore): CardsRepositoryLike {
 	return {
-		async insert(topicId: string, input: CardInsert) {
-			const now = nextDate();
+		async insert(topicId: string, input: CardInsert, now: Date) {
 			const card: Card = {
 				id: randomUUID(),
 				topicId,
@@ -240,13 +239,13 @@ function createInMemoryCardsRepository(store: InMemoryStore): CardsRepositoryLik
 		async findById(id: string) {
 			return store.cards.get(id);
 		},
-		async update(id: string, patch: CardUpdate) {
+		async update(id: string, patch: CardUpdate, now: Date) {
 			const current = store.cards.get(id);
 			if (!current) return undefined;
 			const next: Card = {
 				...current,
 				...definedOnly(patch),
-				updatedAt: nextDate(),
+				updatedAt: now,
 			};
 			store.cards.set(id, next);
 			return next;
@@ -258,9 +257,7 @@ function createInMemoryCardsRepository(store: InMemoryStore): CardsRepositoryLik
 		async listByTopic(topicId: string, { limit, offset }: Pagination) {
 			const all = [...store.cards.values()]
 				.filter((c) => c.topicId === topicId)
-				.toSorted(
-					(a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id),
-				);
+				.toSorted((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 			return { items: all.slice(offset, offset + limit), total: all.length };
 		},
 		async memoExists(id: string) {

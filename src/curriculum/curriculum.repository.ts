@@ -21,8 +21,11 @@ export type AddPrerequisiteOutcome = { cycle: string[] } | { added: boolean };
 export class CurriculumRepository {
 	constructor(@Inject(DATABASE_TOKEN) private readonly db: Database) {}
 
-	async insertTopic(input: TopicInsert): Promise<TopicRow> {
-		const [row] = await this.db.insert(topics).values(input).returning();
+	async insertTopic(input: TopicInsert, now: Date): Promise<TopicRow> {
+		const [row] = await this.db
+			.insert(topics)
+			.values({ ...input, createdAt: now, updatedAt: now })
+			.returning();
 		if (!row) throw new Error('insert into topics returned no row');
 		return row;
 	}
@@ -32,8 +35,12 @@ export class CurriculumRepository {
 		return row;
 	}
 
-	async updateTopic(id: string, patch: TopicUpdate): Promise<TopicRow | undefined> {
-		const [row] = await this.db.update(topics).set(patch).where(eq(topics.id, id)).returning();
+	async updateTopic(id: string, patch: TopicUpdate, now: Date): Promise<TopicRow | undefined> {
+		const [row] = await this.db
+			.update(topics)
+			.set({ ...patch, updatedAt: now })
+			.where(eq(topics.id, id))
+			.returning();
 		return row;
 	}
 

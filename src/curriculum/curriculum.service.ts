@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { CLOCK, type Clock } from '../common/clock.js';
 import { createLogger } from '../common/logger.js';
 import { errors } from '../common/errors.js';
 import { currentLogger } from '../common/request-context.js';
@@ -25,10 +26,13 @@ interface Snapshot {
 export class CurriculumService {
 	private readonly fallbackLog = createLogger({ level: 'info', name: 'rnd' });
 
-	constructor(private readonly repository: CurriculumRepository) {}
+	constructor(
+		private readonly repository: CurriculumRepository,
+		@Inject(CLOCK) private readonly clock: Clock,
+	) {}
 
 	async create(input: TopicInsert): Promise<Result<Topic>> {
-		const row = await this.repository.insertTopic(input);
+		const row = await this.repository.insertTopic(input, this.clock.now());
 		currentLogger(this.fallbackLog).info({ topicId: row.id }, 'topic created');
 		return ok({ ...row, prerequisiteIds: [], cardCount: 0, mastered: true, unlocked: true });
 	}
@@ -46,7 +50,7 @@ export class CurriculumService {
 	}
 
 	async update(id: string, patch: TopicUpdate): Promise<Result<Topic>> {
-		const row = await this.repository.updateTopic(id, patch);
+		const row = await this.repository.updateTopic(id, patch, this.clock.now());
 		if (!row) return err(errors.notFound('topic', id));
 		currentLogger(this.fallbackLog).info({ topicId: id }, 'topic updated');
 		return this.findById(id);

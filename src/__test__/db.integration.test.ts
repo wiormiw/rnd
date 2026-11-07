@@ -67,22 +67,20 @@ describe.skipIf(!url)('repositories on a real Postgres', () => {
 	const run = randomUUID();
 
 	const makeTopic = async () => {
-		const topic = await curriculum.insertTopic({
-			title: `it-${run}-${randomUUID()}`,
-			description: '',
-		});
+		const topic = await curriculum.insertTopic(
+			{ title: `it-${run}-${randomUUID()}`, description: '' },
+			new Date(),
+		);
 		topicIds.push(topic.id);
 		return topic;
 	};
 
 	const makeCard = async (topicId: string, nextReviewAt?: Date) => {
-		const card = await cardsRepo.insert(topicId, {
-			front: 'front',
-			back: 'back',
-			memoId: null,
-			estimatedMinutes: 2,
-			priorityWeight: 1,
-		});
+		const card = await cardsRepo.insert(
+			topicId,
+			{ front: 'front', back: 'back', memoId: null, estimatedMinutes: 2, priorityWeight: 1 },
+			new Date(),
+		);
 		if (!nextReviewAt) return card;
 		const [updated] = await db
 			.update(cards)
@@ -328,13 +326,11 @@ describe.skipIf(!url)('repositories on a real Postgres', () => {
 			const topic = await makeTopic();
 			const memo = await memosRepo.insert({ title: `memo-${run}`, body: '', topicId: null });
 			memoIds.push(memo.id);
-			const card = await cardsRepo.insert(topic.id, {
-				front: 'f',
-				back: 'b',
-				memoId: memo.id,
-				estimatedMinutes: 2,
-				priorityWeight: 1,
-			});
+			const card = await cardsRepo.insert(
+				topic.id,
+				{ front: 'f', back: 'b', memoId: memo.id, estimatedMinutes: 2, priorityWeight: 1 },
+				new Date(),
+			);
 			expect(card.memoId).toBe(memo.id);
 
 			expect(await memosRepo.remove(memo.id)).toBe(true);

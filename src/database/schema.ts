@@ -18,10 +18,7 @@ export const topics = pgTable('topics', {
 	title: text('title').notNull(),
 	description: text('description').notNull().default(''),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-	updatedAt: timestamp('updated_at', { withTimezone: true })
-		.notNull()
-		.defaultNow()
-		.$onUpdate(() => new Date()),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const topicPrerequisites = pgTable(
@@ -70,10 +67,7 @@ export const cards = pgTable(
 		smEaseFactor: doublePrecision('sm_ease_factor').notNull().default(2.5),
 		nextReviewAt: timestamp('next_review_at', { withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-		updatedAt: timestamp('updated_at', { withTimezone: true })
-			.notNull()
-			.defaultNow()
-			.$onUpdate(() => new Date()),
+		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [
 		check('cards_estimated_minutes_min', sql`${t.estimatedMinutes} >= 1`),

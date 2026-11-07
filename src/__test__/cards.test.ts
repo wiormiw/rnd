@@ -99,4 +99,23 @@ describe('cards', () => {
 		expect((await app.get(`/api/v1/cards/${card.id}`)).status).toBe(404);
 		expect((await app.delete(`/api/v1/cards/${card.id}`)).status).toBe(404);
 	});
+
+	it('takes nextReviewAt and timestamps from the clock', async () => {
+		const created = new Date('2031-03-04T05:06:07.000Z');
+		const later = new Date('2031-03-09T10:11:12.000Z');
+		await using app = await buildTestApp({ now: created });
+		const topicId = (await app.post('/api/v1/topics').send({ title: 'T' })).body.id as string;
+
+		const card = (await app.post(`/api/v1/topics/${topicId}/cards`).send({ front: 'q', back: 'a' }))
+			.body;
+		expect(card.nextReviewAt).toBe(created.toISOString());
+		expect(card.createdAt).toBe(created.toISOString());
+		expect(card.updatedAt).toBe(created.toISOString());
+
+		app.clock.set(later);
+		const patched = (await app.patch(`/api/v1/cards/${card.id}`).send({ back: 'b' })).body;
+		expect(patched.updatedAt).toBe(later.toISOString());
+		expect(patched.createdAt).toBe(created.toISOString());
+		expect(patched.nextReviewAt).toBe(created.toISOString());
+	});
 });

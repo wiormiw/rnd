@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { CLOCK, type Clock } from '../common/clock.js';
 import { createLogger } from '../common/logger.js';
 import { errors } from '../common/errors.js';
 import { currentLogger } from '../common/request-context.js';
@@ -11,7 +12,10 @@ import type { Card, CardInsert, CardUpdate } from './card.schema.js';
 export class CardsService {
 	private readonly fallbackLog = createLogger({ level: 'info', name: 'rnd' });
 
-	constructor(private readonly repository: CardsRepository) {}
+	constructor(
+		private readonly repository: CardsRepository,
+		@Inject(CLOCK) private readonly clock: Clock,
+	) {}
 
 	async create(topicId: string, input: CardInsert): Promise<Result<Card>> {
 		if (!(await this.repository.topicExists(topicId)))
@@ -19,7 +23,7 @@ export class CardsService {
 		const memoMissing = await this.missingMemo(input.memoId);
 		if (memoMissing) return err(memoMissing);
 
-		const card = await this.repository.insert(topicId, input);
+		const card = await this.repository.insert(topicId, input, this.clock.now());
 		currentLogger(this.fallbackLog).info({ cardId: card.id, topicId }, 'card created');
 		return ok(card);
 	}
@@ -40,7 +44,7 @@ export class CardsService {
 		const memoMissing = await this.missingMemo(patch.memoId);
 		if (memoMissing) return err(memoMissing);
 
-		const card = await this.repository.update(id, patch);
+		const card = await this.repository.update(id, patch, this.clock.now());
 		if (!card) return err(errors.notFound('card', id));
 		currentLogger(this.fallbackLog).info({ cardId: id }, 'card updated');
 		return ok(card);

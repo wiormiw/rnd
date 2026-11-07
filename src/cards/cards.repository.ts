@@ -11,10 +11,10 @@ import type { Card, CardInsert, CardUpdate } from './card.schema.js';
 export class CardsRepository {
 	constructor(@Inject(DATABASE_TOKEN) private readonly db: Database) {}
 
-	async insert(topicId: string, input: CardInsert): Promise<Card> {
+	async insert(topicId: string, input: CardInsert, now: Date): Promise<Card> {
 		const [row] = await this.db
 			.insert(cards)
-			.values({ ...input, topicId })
+			.values({ ...input, topicId, nextReviewAt: now, createdAt: now, updatedAt: now })
 			.returning();
 		if (!row) throw new Error('insert into cards returned no row');
 		return row;
@@ -25,8 +25,12 @@ export class CardsRepository {
 		return row;
 	}
 
-	async update(id: string, patch: CardUpdate): Promise<Card | undefined> {
-		const [row] = await this.db.update(cards).set(patch).where(eq(cards.id, id)).returning();
+	async update(id: string, patch: CardUpdate, now: Date): Promise<Card | undefined> {
+		const [row] = await this.db
+			.update(cards)
+			.set({ ...patch, updatedAt: now })
+			.where(eq(cards.id, id))
+			.returning();
 		return row;
 	}
 

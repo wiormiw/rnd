@@ -177,3 +177,21 @@ describe('GET /curriculum/order', () => {
 		expect(res.body[0]).toHaveProperty('unlocked');
 	});
 });
+
+describe('topic timestamps', () => {
+	it('come from the clock', async () => {
+		const created = new Date('2031-03-04T05:06:07.000Z');
+		const later = new Date('2031-03-09T10:11:12.000Z');
+		await using app = await buildTestApp({ now: created });
+
+		const made = await topic(app, 'T');
+		const fresh = (await app.get(`/api/v1/topics/${made.id}`)).body;
+		expect(fresh.createdAt).toBe(created.toISOString());
+		expect(fresh.updatedAt).toBe(created.toISOString());
+
+		app.clock.set(later);
+		const patched = (await app.patch(`/api/v1/topics/${made.id}`).send({ title: 'U' })).body;
+		expect(patched.updatedAt).toBe(later.toISOString());
+		expect(patched.createdAt).toBe(created.toISOString());
+	});
+});
