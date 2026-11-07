@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { NodeAdapter } from '@nestjs/platform-node';
 import { AppModule } from './app.module.js';
