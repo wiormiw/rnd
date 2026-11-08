@@ -5,6 +5,7 @@ import {
 	createInsertSchema,
 	createUpdateSchema,
 	idSchema,
+	text,
 } from '../common/schemas.js';
 
 /**
@@ -22,7 +23,6 @@ const serverOwned = {
 	updatedAt: true,
 } as const;
 
-const text = (max: number) => (s: z.ZodString) => s.trim().min(1).max(max);
 const minutes = (s: z.ZodInt) => s.min(1).max(120);
 const weight = (s: z.ZodNumber) => s.min(0.001).max(10);
 const memoId = idSchema.nullable().optional();
