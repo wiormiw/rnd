@@ -1,26 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ActionItem } from '../action-items/action-item.schema.js';
-import type { Card } from '../cards/card.schema.js';
 import { CLOCK, type Clock } from '../common/clock.js';
 import { errors } from '../common/errors.js';
-import { createLogger } from '../common/logger.js';
 import { currentLogger } from '../common/request-context.js';
 import { err, ok, type Result } from '../common/result.js';
-import type { Page, Pagination } from '../common/schemas.js';
+import { toPage, type Page, type Pagination } from '../common/schemas.js';
 import { decideReview } from '../engines/index.js';
-import type { ReviewInsert, ReviewLog } from './review.schema.js';
+import type { ReviewInsert, ReviewLog, ReviewResult } from './review.schema.js';
 import { ReviewsRepository } from './reviews.repository.js';
-
-export interface ReviewResult {
-	card: Card;
-	nextReviewAt: Date;
-	actionItem: ActionItem | null;
-}
 
 @Injectable()
 export class ReviewsService {
-	private readonly fallbackLog = createLogger({ level: 'info', name: 'rnd' });
-
 	constructor(
 		private readonly repository: ReviewsRepository,
 		@Inject(CLOCK) private readonly clock: Clock,
@@ -37,7 +26,7 @@ export class ReviewsService {
 				errors.conflict('card has a pending practice task', { actionItemId: outcome.actionItemId }),
 			);
 		}
-		currentLogger(this.fallbackLog).info(
+		currentLogger().info(
 			{
 				cardId,
 				qualityScore: input.qualityScore,
@@ -56,6 +45,6 @@ export class ReviewsService {
 	async listByCard(cardId: string, page: Pagination): Promise<Result<Page<ReviewLog>>> {
 		if (!(await this.repository.cardExists(cardId))) return err(errors.notFound('card', cardId));
 		const { items, total } = await this.repository.listByCard(cardId, page);
-		return ok({ items, total, limit: page.limit, offset: page.offset });
+		return ok(toPage(items, total, page));
 	}
 }
