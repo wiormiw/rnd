@@ -3,7 +3,7 @@ import type { NestMiddleware } from '@nestjs/common';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { requestContext, type RequestContext } from '../request-context.js';
-import { createLogger } from '../logger.js';
+import { defaultLogger } from '../logger.js';
 
 /**
  * Runs the rest of the request lifecycle inside an AsyncLocalStorage store so
@@ -12,16 +12,14 @@ import { createLogger } from '../logger.js';
  */
 @Injectable()
 export class RequestContextMiddleware implements NestMiddleware {
-	private readonly log = createLogger({ level: 'info', name: 'rnd' });
-
 	use(req: IncomingMessage, res: ServerResponse, next: () => void): void {
 		const requestId = randomUUID();
-		const logger = this.log.child({ requestId });
+		const logger = defaultLogger.child({ requestId });
 
 		res.setHeader('x-request-id', requestId);
 
 		// Wire an AbortSignal so downstream code can cancel work when the
-		// client disconnects — mirrors Fastify's request.signal.
+		// client disconnects so cancellable work stops.
 		const controller = new AbortController();
 		req.on('close', () => {
 			controller.abort();

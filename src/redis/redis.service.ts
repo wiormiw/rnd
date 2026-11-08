@@ -4,7 +4,7 @@ import {
 	type OnApplicationShutdown,
 } from '@nestjs/common';
 import { ConfigService } from '../config/config.service.js';
-import { createLogger } from '../common/logger.js';
+import { defaultLogger } from '../common/logger.js';
 import { timeoutSignal } from '../common/abort.js';
 import { createRedis, type RedisClient } from './client.js';
 import { createRedisTokenBucket, type TokenBucket } from './token-bucket.js';
@@ -15,7 +15,7 @@ export const TOKEN_BUCKET_TOKEN = Symbol('TOKEN_BUCKET');
 @Injectable()
 export class RedisService implements OnApplicationBootstrap, OnApplicationShutdown {
 	readonly #redis: ReturnType<typeof createRedis>;
-	readonly #log = createLogger({ level: 'info', name: 'rnd' }).child({ component: 'redis' });
+	readonly #log = defaultLogger.child({ component: 'redis' });
 
 	constructor(private readonly config: ConfigService) {
 		this.#redis = createRedis(config.getAll(), this.#log);

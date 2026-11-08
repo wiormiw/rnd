@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import type { Logger } from './logger.js';
+import { defaultLogger, type Logger } from './logger.js';
 
 type BaseLogger = Pick<Logger, 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'>;
 
@@ -25,6 +25,6 @@ export const requestContext = {
  * services and repositories log with the request id without receiving it as a
  * parameter.
  */
-export function currentLogger<Fallback extends BaseLogger>(fallback: Fallback): BaseLogger {
+export function currentLogger(fallback: BaseLogger = defaultLogger): BaseLogger {
 	return storage.getStore()?.logger ?? fallback;
 }

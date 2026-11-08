@@ -4,7 +4,7 @@ import {
 	type OnApplicationShutdown,
 } from '@nestjs/common';
 import { ConfigService } from '../config/config.service.js';
-import { createLogger } from '../common/logger.js';
+import { defaultLogger } from '../common/logger.js';
 import { timeoutSignal } from '../common/abort.js';
 import { createDatabase, type Database } from './client.js';
 
@@ -13,7 +13,7 @@ export const DATABASE_TOKEN = Symbol('DATABASE');
 @Injectable()
 export class DatabaseService implements OnApplicationBootstrap, OnApplicationShutdown {
 	readonly #db: ReturnType<typeof createDatabase>;
-	readonly #log = createLogger({ level: 'info', name: 'rnd' }).child({ component: 'db' });
+	readonly #log = defaultLogger.child({ component: 'db' });
 
 	constructor(private readonly config: ConfigService) {
 		this.#db = createDatabase(config.getAll(), this.#log);
