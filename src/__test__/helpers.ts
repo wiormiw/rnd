@@ -200,7 +200,7 @@ function createInMemoryCurriculumRepository(store: InMemoryStore): CurriculumRep
 				cards: [...store.cards.values()].map((c) => ({
 					id: c.id,
 					topicId: c.topicId,
-					repetition: c.smRepetition,
+					smRepetition: c.smRepetition,
 				})),
 				pendingCardIds: [...store.actionItems.values()]
 					.filter((i) => i.status === 'PENDING')

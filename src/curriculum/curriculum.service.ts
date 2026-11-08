@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CLOCK, type Clock } from '../common/clock.js';
-import { createLogger } from '../common/logger.js';
 import { errors } from '../common/errors.js';
 import { currentLogger } from '../common/request-context.js';
 import { err, ok, type Result } from '../common/result.js';
@@ -12,9 +11,7 @@ import {
 	type Edge,
 } from '../engines/index.js';
 import { CurriculumRepository } from './curriculum.repository.js';
-import type { Topic, TopicInsert, TopicRow, TopicUpdate } from './topic.schema.js';
-
-type TopicStatus = Omit<Topic, keyof TopicRow>;
+import type { Topic, TopicInsert, TopicRow, TopicStatus, TopicUpdate } from './topic.schema.js';
 
 interface Snapshot {
 	topics: TopicRow[];
@@ -24,8 +21,6 @@ interface Snapshot {
 
 @Injectable()
 export class CurriculumService {
-	private readonly fallbackLog = createLogger({ level: 'info', name: 'rnd' });
-
 	constructor(
 		private readonly repository: CurriculumRepository,
 		@Inject(CLOCK) private readonly clock: Clock,
@@ -33,7 +28,7 @@ export class CurriculumService {
 
 	async create(input: TopicInsert): Promise<Result<Topic>> {
 		const row = await this.repository.insertTopic(input, this.clock.now());
-		currentLogger(this.fallbackLog).info({ topicId: row.id }, 'topic created');
+		currentLogger().info({ topicId: row.id }, 'topic created');
 		return ok({ ...row, prerequisiteIds: [], cardCount: 0, mastered: true, unlocked: true });
 	}
 
@@ -52,14 +47,14 @@ export class CurriculumService {
 	async update(id: string, patch: TopicUpdate): Promise<Result<Topic>> {
 		const row = await this.repository.updateTopic(id, patch, this.clock.now());
 		if (!row) return err(errors.notFound('topic', id));
-		currentLogger(this.fallbackLog).info({ topicId: id }, 'topic updated');
+		currentLogger().info({ topicId: id }, 'topic updated');
 		return this.findById(id);
 	}
 
 	async remove(id: string): Promise<Result<void>> {
 		const removed = await this.repository.removeTopic(id);
 		if (!removed) return err(errors.notFound('topic', id));
-		currentLogger(this.fallbackLog).info({ topicId: id }, 'topic removed');
+		currentLogger().info({ topicId: id }, 'topic removed');
 		return ok(undefined);
 	}
 
@@ -72,7 +67,7 @@ export class CurriculumService {
 			wouldCreateCycle(edges, topicId, prerequisiteId),
 		);
 		if ('cycle' in outcome) return err(cycleConflict(outcome.cycle));
-		currentLogger(this.fallbackLog).info({ topicId, prerequisiteId }, 'prerequisite added');
+		currentLogger().info({ topicId, prerequisiteId }, 'prerequisite added');
 		return ok(undefined);
 	}
 
@@ -115,7 +110,7 @@ export class CurriculumService {
 		for (const topic of topics) {
 			const cards = (cardsByTopic.get(topic.id) ?? []).map((c) => ({
 				id: c.id,
-				repetition: c.repetition,
+				repetition: c.smRepetition,
 			}));
 			if (isMastered(cards, pending)) mastered.add(topic.id);
 		}

@@ -11,22 +11,18 @@ import {
 	Put,
 } from '@nestjs/common';
 import { unwrap } from '../common/result.js';
-import { idParams } from '../common/schemas.js';
+import { idParams, type IdParams } from '../common/schemas.js';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe.js';
 import { CurriculumService } from './curriculum.service.js';
 import {
 	prerequisiteParams,
+	type PrerequisiteParams,
 	topicInsertSchema,
 	topicUpdateSchema,
 	type Topic,
 	type TopicInsert,
 	type TopicUpdate,
 } from './topic.schema.js';
-
-interface PrerequisiteParams {
-	id: string;
-	prerequisiteId: string;
-}
 
 /** Root-level controller: `curriculum/order` and `topics/*` never collide. */
 @Controller()
@@ -45,13 +41,13 @@ export class CurriculumController {
 	}
 
 	@Get('topics/:id')
-	async findOne(@Param(new ZodValidationPipe(idParams)) params: { id: string }): Promise<Topic> {
+	async findOne(@Param(new ZodValidationPipe(idParams)) params: IdParams): Promise<Topic> {
 		return unwrap(await this.service.findById(params.id));
 	}
 
 	@Patch('topics/:id')
 	async update(
-		@Param(new ZodValidationPipe(idParams)) params: { id: string },
+		@Param(new ZodValidationPipe(idParams)) params: IdParams,
 		@Body(new ZodValidationPipe(topicUpdateSchema)) body: TopicUpdate,
 	): Promise<Topic> {
 		return unwrap(await this.service.update(params.id, body));
@@ -59,7 +55,7 @@ export class CurriculumController {
 
 	@Delete('topics/:id')
 	@HttpCode(HttpStatus.NO_CONTENT)
-	async remove(@Param(new ZodValidationPipe(idParams)) params: { id: string }): Promise<void> {
+	async remove(@Param(new ZodValidationPipe(idParams)) params: IdParams): Promise<void> {
 		unwrap(await this.service.remove(params.id));
 	}
 

@@ -3,6 +3,7 @@ import { and, asc, eq, sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { DATABASE_TOKEN } from '../database/database.service.js';
 import { actionItems, cards, topicPrerequisites, topics } from '../database/schema.js';
+import type { Card } from '../cards/card.schema.js';
 import type { Edge } from '../engines/index.js';
 import type { TopicInsert, TopicRow, TopicUpdate } from './topic.schema.js';
 
@@ -10,7 +11,7 @@ import type { TopicInsert, TopicRow, TopicUpdate } from './topic.schema.js';
 const PREREQUISITE_LOCK = 7_204_311;
 
 export interface MasteryInputs {
-	cards: { id: string; topicId: string; repetition: number }[];
+	cards: Pick<Card, 'id' | 'topicId' | 'smRepetition'>[];
 	pendingCardIds: string[];
 }
 
@@ -109,7 +110,7 @@ export class CurriculumRepository {
 	async masteryInputs(): Promise<MasteryInputs> {
 		const [cardRows, pending] = await Promise.all([
 			this.db
-				.select({ id: cards.id, topicId: cards.topicId, repetition: cards.smRepetition })
+				.select({ id: cards.id, topicId: cards.topicId, smRepetition: cards.smRepetition })
 				.from(cards),
 			this.db
 				.select({ cardId: actionItems.cardId })
