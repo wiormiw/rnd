@@ -1,17 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CLOCK, type Clock } from '../common/clock.js';
-import { createLogger } from '../common/logger.js';
 import { currentLogger } from '../common/request-context.js';
 import { ok, type Result } from '../common/result.js';
 import { CurriculumService } from '../curriculum/curriculum.service.js';
 import { scheduleSprint, urgencyScore } from '../engines/index.js';
 import { ScheduleRepository } from './schedule.repository.js';
-import type { DailySprint } from './schedule.schema.js';
+import type { DailySprint, DueCard, SprintCard } from './schedule.schema.js';
 
 @Injectable()
 export class ScheduleService {
-	private readonly fallbackLog = createLogger({ level: 'info', name: 'rnd' });
-
 	constructor(
 		private readonly repository: ScheduleRepository,
 		private readonly curriculum: CurriculumService,
@@ -43,18 +40,12 @@ export class ScheduleService {
 
 		const selected = scheduleSprint(candidates, maxMinutes);
 		const items = selected.map(({ card, urgency }) => ({
-			card: {
-				id: card.id,
-				topicId: card.topicId,
-				front: card.front,
-				back: card.back,
-				estimatedMinutes: card.estimatedMinutes,
-			},
+			card: toSprintCard(card),
 			urgency,
 		}));
 		const allocatedMinutes = items.reduce((sum, item) => sum + item.card.estimatedMinutes, 0);
 
-		currentLogger(this.fallbackLog).info(
+		currentLogger().info(
 			{ candidates: candidates.length, selected: items.length, allocatedMinutes, maxMinutes },
 			'daily sprint generated',
 		);
@@ -66,4 +57,8 @@ export class ScheduleService {
 			items,
 		});
 	}
+}
+
+function toSprintCard({ id, topicId, front, back, estimatedMinutes }: DueCard): SprintCard {
+	return { id, topicId, front, back, estimatedMinutes };
 }
