@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { createLogger } from '../common/logger.js';
 import { errors } from '../common/errors.js';
 import { currentLogger } from '../common/request-context.js';
 import { err, fromNullable, ok, type Result } from '../common/result.js';
-import type { Page, Pagination } from '../common/schemas.js';
+import { toPage, type Page, type Pagination } from '../common/schemas.js';
 import { MemosRepository } from './memos.repository.js';
 import type { Memo, MemoInsert, MemoUpdate } from './memo.schema.js';
 
@@ -13,8 +12,6 @@ import type { Memo, MemoInsert, MemoUpdate } from './memo.schema.js';
  */
 @Injectable()
 export class MemosService {
-	private readonly fallbackLog = createLogger({ level: 'info', name: 'rnd' });
-
 	constructor(private readonly repository: MemosRepository) {}
 
 	async create(input: MemoInsert): Promise<Result<Memo>> {
@@ -22,7 +19,7 @@ export class MemosService {
 		if (topicMissing) return err(topicMissing);
 		const memo = await this.repository.insert(input);
 		// Picks up the request id from AsyncLocalStorage, no parameter needed.
-		currentLogger(this.fallbackLog).info({ memoId: memo.id }, 'memo created');
+		currentLogger().info({ memoId: memo.id }, 'memo created');
 		return ok(memo);
 	}
 
@@ -35,26 +32,26 @@ export class MemosService {
 		if (topicMissing) return err(topicMissing);
 		const memo = await this.repository.update(id, patch);
 		if (!memo) return err(errors.notFound('memo', id));
-		currentLogger(this.fallbackLog).info({ memoId: id }, 'memo updated');
+		currentLogger().info({ memoId: id }, 'memo updated');
 		return ok(memo);
 	}
 
 	async list(page: Pagination): Promise<Result<Page<Memo>>> {
 		const { items, total } = await this.repository.list(page);
-		return ok({ items, total, limit: page.limit, offset: page.offset });
+		return ok(toPage(items, total, page));
 	}
 
 	async listByTopic(topicId: string, page: Pagination): Promise<Result<Page<Memo>>> {
 		if (!(await this.repository.topicExists(topicId)))
 			return err(errors.notFound('topic', topicId));
 		const { items, total } = await this.repository.listByTopic(topicId, page);
-		return ok({ items, total, limit: page.limit, offset: page.offset });
+		return ok(toPage(items, total, page));
 	}
 
 	async remove(id: string): Promise<Result<void>> {
 		const removed = await this.repository.remove(id);
 		if (!removed) return err(errors.notFound('memo', id));
-		currentLogger(this.fallbackLog).info({ memoId: id }, 'memo removed');
+		currentLogger().info({ memoId: id }, 'memo removed');
 		return ok(undefined);
 	}
 
