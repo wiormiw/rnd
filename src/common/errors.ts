@@ -7,6 +7,8 @@
  * `Result` carrying an `AppError`; unexpected ones (a bug, a dead database) are
  * thrown and become a generic 500 at the edge.
  */
+import { ceilSeconds } from './duration.js';
+
 export const ERROR_CODES = [
 	'invalid',
 	'unauthorized',
@@ -19,6 +21,11 @@ export const ERROR_CODES = [
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
+
+/** The `details` of a `rate_limited` error. */
+export interface RateLimitedDetails {
+	retryAfterSeconds: number;
+}
 
 export interface AppErrorOptions {
 	/** Safe to show to the caller. Never put secrets or internals here. */
@@ -60,7 +67,7 @@ export const errors = {
 	/** The caller is over its quota. `retryAfterMs` becomes a Retry-After at the edge. */
 	rateLimited: (retryAfterMs: number) =>
 		new AppError('rate_limited', 'Too many requests', {
-			details: { retryAfterSeconds: Math.max(1, Math.ceil(retryAfterMs / 1000)) },
+			details: { retryAfterSeconds: ceilSeconds(retryAfterMs) } satisfies RateLimitedDetails,
 		}),
 
 	/** A dependency is down or too slow. `service` is logged, not shown to callers. */
