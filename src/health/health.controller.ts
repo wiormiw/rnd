@@ -5,21 +5,13 @@ import type { ServerResponse } from 'node:http';
 import { sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { DATABASE_TOKEN } from '../database/database.service.js';
+import type { RedisClient } from '../redis/client.js';
 import { REDIS_TOKEN } from '../redis/redis.service.js';
+import { sendJson } from '../common/http.js';
 import { RateLimit } from '../common/guards/rate-limit.guard.js';
-import { createLogger } from '../common/logger.js';
+import { defaultLogger } from '../common/logger.js';
 
-interface PingableRedis {
-	ping(): Promise<unknown>;
-}
-
-const log = createLogger({ level: 'info', name: 'rnd' }).child({ component: 'health' });
-
-function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
-	res.statusCode = statusCode;
-	res.setHeader('Content-Type', 'application/json');
-	res.end(JSON.stringify(body));
-}
+const log = defaultLogger.child({ component: 'health' });
 
 // Probes must never be throttled: an orchestrator polling them would drain the bucket.
 @RateLimit(false)
@@ -29,7 +21,7 @@ export class HealthController {
 		private readonly health: HealthCheckService,
 		private readonly indicator: HealthIndicatorService,
 		@Inject(DATABASE_TOKEN) private readonly db: Database,
-		@Inject(REDIS_TOKEN) private readonly redis: PingableRedis,
+		@Inject(REDIS_TOKEN) private readonly redis: Pick<RedisClient, 'ping'>,
 	) {}
 
 	/** Liveness: the process is up. Never touches dependencies. */

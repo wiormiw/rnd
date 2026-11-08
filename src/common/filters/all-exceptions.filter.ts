@@ -2,15 +2,10 @@ import { Catch, HttpException } from '@nestjs/common';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { ZodError } from 'zod';
-import { STATUS_BY_CODE, isAppError, type ErrorCode } from '../errors.js';
+import { STATUS_BY_CODE, isAppError, type ErrorCode, type RateLimitedDetails } from '../errors.js';
+import { sendJson } from '../http.js';
+import type { ErrorBody } from '../schemas.js';
 import { currentLogger } from '../request-context.js';
-import { createLogger } from '../logger.js';
-
-interface ErrorBody {
-	code: ErrorCode;
-	message: string;
-	details?: unknown;
-}
 
 // fallow-ignore-next-line complexity
 function codeForStatus(status: number): ErrorCode {
@@ -30,12 +25,6 @@ function codeForStatus(status: number): ErrorCode {
 	}
 }
 
-function send(res: ServerResponse, statusCode: number, body: ErrorBody): void {
-	res.statusCode = statusCode;
-	res.setHeader('Content-Type', 'application/json');
-	res.end(JSON.stringify(body));
-}
-
 /**
  * THE edge: the only place that knows about HTTP status codes. Catches every
  * unhandled exception and converts it to a consistent `ErrorBody` response.
@@ -44,14 +33,12 @@ function send(res: ServerResponse, statusCode: number, body: ErrorBody): void {
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-	private readonly fallbackLog = createLogger({ level: 'info', name: 'rnd' });
-
 	// fallow-ignore-next-line complexity
 	catch(exception: unknown, host: ArgumentsHost): void {
 		const ctx = host.switchToHttp();
 		const res = ctx.getResponse<ServerResponse>();
 		const req = ctx.getRequest<IncomingMessage>();
-		const log = currentLogger(this.fallbackLog);
+		const log = currentLogger();
 
 		// ZodError → 400 with field-level error details
 		if (exception instanceof ZodError) {
@@ -63,7 +50,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 					message: issue.message,
 				})),
 			};
-			return send(res, 400, body);
+			return sendJson(res, 400, body);
 		}
 
 		// AppError → HTTP status from STATUS_BY_CODE
@@ -74,17 +61,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
 				log.error({ err: exception }, 'request failed');
 				const code: ErrorCode = status === 503 ? 'unavailable' : 'internal';
 				const message = status === 503 ? 'Service unavailable' : 'Internal server error';
-				return send(res, status, { code, message });
+				return sendJson(res, status, { code, message });
 			}
 
 			if (exception.code === 'rate_limited') {
-				const details = exception.details as { retryAfterSeconds?: number } | undefined;
-				if (details?.retryAfterSeconds !== undefined) {
+				const details = exception.details as RateLimitedDetails | undefined;
+				if (details) {
 					res.setHeader('retry-after', details.retryAfterSeconds);
 				}
 			}
 
-			return send(res, status, {
+			return sendJson(res, status, {
 				code: exception.code,
 				message: exception.message,
 				details: exception.details,
@@ -97,13 +84,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
 			if (status >= 500) {
 				log.error({ err: exception }, 'request failed');
-				return send(res, status, { code: 'internal', message: 'Internal server error' });
+				return sendJson(res, status, { code: 'internal', message: 'Internal server error' });
 			}
 
 			if (status === 404) {
 				// `url` is relative to the /api/v1 mount; `originalUrl` is what the client sent.
 				const url = (req as IncomingMessage & { originalUrl?: string }).originalUrl ?? req.url;
-				return send(res, 404, {
+				return sendJson(res, 404, {
 					code: 'not_found',
 					message: `Route ${req.method ?? 'UNKNOWN'} ${url ?? '/'} not found`,
 				});
@@ -116,11 +103,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
 					: (response as Record<string, unknown>)['message'] != null
 						? String((response as Record<string, unknown>)['message'])
 						: exception.message;
-			return send(res, status, { code: codeForStatus(status), message });
+			return sendJson(res, status, { code: codeForStatus(status), message });
 		}
 
 		// Unknown error → 500 (details stay in logs, never exposed to callers)
 		log.error({ err: exception }, 'unhandled exception');
-		send(res, 500, { code: 'internal', message: 'Internal server error' });
+		sendJson(res, 500, { code: 'internal', message: 'Internal server error' });
 	}
 }

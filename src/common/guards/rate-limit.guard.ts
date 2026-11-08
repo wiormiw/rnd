@@ -4,25 +4,21 @@ import { Reflector } from '@nestjs/core';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { TOKEN_BUCKET_TOKEN } from '../../redis/redis.service.js';
 import { ConfigService } from '../../config/config.service.js';
+import { ceilSeconds } from '../duration.js';
 import { errors } from '../errors.js';
 import { currentLogger } from '../request-context.js';
-import { createLogger } from '../logger.js';
-import type { TokenBucket } from '../../redis/token-bucket.js';
-import type { BucketPolicy } from '../../redis/token-bucket.js';
+import type { BucketPolicy, TokenBucket } from '../../redis/token-bucket.js';
 
 export const RATE_LIMIT_METADATA = 'rateLimit';
+
+type RouteMeta = false | Partial<Pick<BucketPolicy, 'capacity' | 'cost'>>;
 
 /**
  * Decorate a controller or handler to opt out of rate limiting (`false`) or
  * give it its own bucket policy (overrides are merged onto the global defaults).
  */
-export const RateLimit = (
-	policy: false | { capacity?: number; cost?: number },
-): MethodDecorator & ClassDecorator => SetMetadata(RATE_LIMIT_METADATA, policy);
-
-type RouteMeta = false | { capacity?: number; cost?: number };
-
-const seconds = (ms: number): number => Math.max(1, Math.ceil(ms / 1000));
+export const RateLimit = (policy: RouteMeta): MethodDecorator & ClassDecorator =>
+	SetMetadata(RATE_LIMIT_METADATA, policy);
 
 /**
  * Per-client-IP rate limiting. Sets `RateLimit-*` headers on every counted
@@ -35,8 +31,6 @@ const seconds = (ms: number): number => Math.max(1, Math.ceil(ms / 1000));
  */
 @Injectable()
 export class RateLimitGuard implements CanActivate {
-	private readonly fallbackLog = createLogger({ level: 'info', name: 'rnd' });
-
 	constructor(
 		@Inject(TOKEN_BUCKET_TOKEN) private readonly bucket: TokenBucket,
 		private readonly config: ConfigService,
@@ -56,7 +50,7 @@ export class RateLimitGuard implements CanActivate {
 
 		const req = context.switchToHttp().getRequest<IncomingMessage>();
 		const res = context.switchToHttp().getResponse<ServerResponse>();
-		const log = currentLogger(this.fallbackLog);
+		const log = currentLogger();
 
 		const capacity = this.config.get('RATE_LIMIT_CAPACITY');
 		const refillPerSecond = this.config.get('RATE_LIMIT_REFILL_PER_SECOND');
@@ -96,7 +90,7 @@ export class RateLimitGuard implements CanActivate {
 
 		res.setHeader('ratelimit-limit', policy.capacity);
 		res.setHeader('ratelimit-remaining', result.remaining);
-		res.setHeader('ratelimit-reset', seconds(result.fullInMs));
+		res.setHeader('ratelimit-reset', ceilSeconds(result.fullInMs));
 
 		if (!result.allowed) {
 			log.info({ key }, 'rate limit exceeded');
