@@ -1,8 +1,7 @@
 import * as z from 'zod';
+import { intEnv } from '../common/env.js';
 import { dbEnvSchema } from '../database/env.js';
 import { redisEnvSchema } from '../redis/env.js';
-
-const ms = (min = 0) => z.coerce.number().int().min(min);
 
 const envSchema = z.object({
 	NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -16,13 +15,13 @@ const envSchema = z.object({
 		.optional(),
 
 	// HTTP server timeouts.
-	KEEP_ALIVE_TIMEOUT_MS: ms().default(72_000),
+	KEEP_ALIVE_TIMEOUT_MS: intEnv().default(72_000),
 	/** Hard deadline for the whole graceful shutdown. Keep it above LIFECYCLE_STOP_TIMEOUT_MS. */
-	SHUTDOWN_TIMEOUT_MS: ms(1).default(15_000),
+	SHUTDOWN_TIMEOUT_MS: intEnv(1).default(15_000),
 
 	// Infrastructure lifecycle timeouts (per resource).
-	LIFECYCLE_START_TIMEOUT_MS: ms(1).default(15_000),
-	LIFECYCLE_STOP_TIMEOUT_MS: ms(1).default(10_000),
+	LIFECYCLE_START_TIMEOUT_MS: intEnv(1).default(15_000),
+	LIFECYCLE_STOP_TIMEOUT_MS: intEnv(1).default(10_000),
 
 	/** Trust X-Forwarded-For. Enable ONLY behind a proxy you control, or clients can spoof their IP. */
 	TRUST_PROXY: z.stringbool().default(false),
@@ -34,7 +33,7 @@ const envSchema = z.object({
 	/** Tokens added per second: the sustained rate. May be fractional (0.5 = one per 2s). */
 	RATE_LIMIT_REFILL_PER_SECOND: z.coerce.number().positive().default(1),
 	/** Give up on Redis after this long. */
-	RATE_LIMIT_TIMEOUT_MS: ms(1).default(200),
+	RATE_LIMIT_TIMEOUT_MS: intEnv(1).default(200),
 	/** true: let requests through when Redis fails. false: answer 503. */
 	RATE_LIMIT_FAIL_OPEN: z.stringbool().default(true),
 

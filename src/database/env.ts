@@ -1,6 +1,5 @@
 import * as z from 'zod';
-
-const int = (min = 0) => z.coerce.number().int().min(min);
+import { intEnv } from '../common/env.js';
 
 /**
  * Environment variables for the postgres.js client. Names follow the option
@@ -19,21 +18,21 @@ export const dbEnvSchema = z.object({
 	DB_CHANNEL_BINDING: z.enum(['disable', 'prefer', 'require']).optional(),
 
 	// Pool
-	DB_MAX: int(1).default(10),
-	DB_MIN: int(0).default(0),
-	DB_MAX_PIPELINE: int(1).default(100),
+	DB_MAX: intEnv(1).default(10),
+	DB_MIN: intEnv(0).default(0),
+	DB_MAX_PIPELINE: intEnv(1).default(100),
 	DB_SCHEDULER: z.stringbool().default(true),
 	/** Seconds before an idle connection closes. 0 keeps it open. */
-	DB_IDLE_TIMEOUT: int(0).default(30),
+	DB_IDLE_TIMEOUT: intEnv(0).default(30),
 	/** Seconds a query may wait for a free connection. 0 waits forever. */
-	DB_QUEUE_TIMEOUT: int(0).default(10),
-	DB_CONNECT_TIMEOUT: int(0).default(10),
+	DB_QUEUE_TIMEOUT: intEnv(0).default(10),
+	DB_CONNECT_TIMEOUT: intEnv(0).default(10),
 	/** Seconds a connection lives at most. Unset keeps the driver default (30-60 min). */
-	DB_MAX_LIFETIME: int(0).optional(),
+	DB_MAX_LIFETIME: intEnv(0).optional(),
 	/** Seconds before reconnecting after a failure. Unset keeps exponential backoff. */
-	DB_BACKOFF: int(0).optional(),
+	DB_BACKOFF: intEnv(0).optional(),
 	/** Seconds of TCP keep-alive. 0 disables it. */
-	DB_KEEP_ALIVE: int(0).default(60),
+	DB_KEEP_ALIVE: intEnv(0).default(60),
 
 	// Protocol and types
 	/** Set to false behind PgBouncer in transaction pooling mode. */
@@ -57,10 +56,10 @@ export const dbEnvSchema = z.object({
 
 	// Run-time parameters sent at startup (the `connection` option)
 	DB_APPLICATION_NAME: z.string().min(1).default('rnd'),
-	DB_STATEMENT_TIMEOUT_MS: int(0).default(30_000),
-	DB_LOCK_TIMEOUT_MS: int(0).optional(),
-	DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT_MS: int(0).default(60_000),
-	DB_IDLE_SESSION_TIMEOUT_MS: int(0).optional(),
+	DB_STATEMENT_TIMEOUT_MS: intEnv(0).default(30_000),
+	DB_LOCK_TIMEOUT_MS: intEnv(0).optional(),
+	DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT_MS: intEnv(0).default(60_000),
+	DB_IDLE_SESSION_TIMEOUT_MS: intEnv(0).optional(),
 	DB_TIMEZONE: z.string().min(1).optional(),
 	DB_DEFAULT_TRANSACTION_ISOLATION: z
 		.enum(['read uncommitted', 'read committed', 'repeatable read', 'serializable'])
@@ -68,7 +67,7 @@ export const dbEnvSchema = z.object({
 	DB_DEFAULT_TRANSACTION_READ_ONLY: z.stringbool().optional(),
 
 	/** Seconds to let in-flight queries finish when closing the pool. */
-	DB_END_TIMEOUT: int(0).default(5),
+	DB_END_TIMEOUT: intEnv(0).default(5),
 });
 
 export type DbEnv = z.infer<typeof dbEnvSchema>;
