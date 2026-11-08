@@ -1,6 +1,6 @@
 import { Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
 import { unwrap } from '../common/result.js';
-import { idParams, type Page } from '../common/schemas.js';
+import { idParams, type IdParams, type Page } from '../common/schemas.js';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe.js';
 import {
 	actionItemListQuery,
@@ -22,9 +22,7 @@ export class ActionItemsController {
 
 	@Post(':id/complete')
 	@HttpCode(HttpStatus.OK)
-	async complete(
-		@Param(new ZodValidationPipe(idParams)) params: { id: string },
-	): Promise<ActionItem> {
+	async complete(@Param(new ZodValidationPipe(idParams)) params: IdParams): Promise<ActionItem> {
 		return unwrap(await this.service.complete(params.id));
 	}
 }
